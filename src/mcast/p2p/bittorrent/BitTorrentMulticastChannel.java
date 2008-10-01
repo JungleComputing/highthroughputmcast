@@ -2,6 +2,7 @@ package mcast.p2p.bittorrent;
 
 import ibis.ipl.Ibis;
 import ibis.ipl.IbisIdentifier;
+import ibis.ipl.PortType;
 
 import java.io.IOException;
 import java.util.Set;
@@ -71,6 +72,10 @@ public class BitTorrentMulticastChannel extends AbstractMulticastChannel
         logger.info("- min. peers:            " + MIN_PEERS);
         logger.info("- max. pending requests: " + MAX_PENDING_REQUESTS);
         logger.info("- end game:              " + END_GAME);
+    }
+    
+    public static PortType getPortType() {
+        return BitTorrentConnection.getPortType();
     }
 
     protected void doMulticastStorage(Storage storage, 
