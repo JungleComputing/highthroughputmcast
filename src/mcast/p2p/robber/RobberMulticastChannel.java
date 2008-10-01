@@ -2,6 +2,7 @@ package mcast.p2p.robber;
 
 import ibis.ipl.Ibis;
 import ibis.ipl.IbisIdentifier;
+import ibis.ipl.PortType;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -103,11 +104,16 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
                 mcast.p2p.bittorrent.Config.MAX_PENDING_REQUESTS);
     }
 
+    public static PortType getPortType() {
+        return RobberConnection.getPortType();
+    }
+    
     protected void doMulticastStorage(Storage storage, 
             Set<IbisIdentifier> roots, PieceIndexSet possession) 
             throws IOException {
 
-        PieceIndexSet work = initWork(storage.getPieceCount(), possession);
+        PieceIndexSet work = initWork(storage.getPieceCount());
+        work.removeAll(possession);
         logger.info("my work is " + work.size() + " pieces: " + work);
 
         Collective myCollective = pool.getCollective(me);
@@ -150,7 +156,7 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
         }
     }
 
-    private PieceIndexSet initWork(int totalPieces, PieceIndexSet possession) {
+    private PieceIndexSet initWork(int totalPieces) {
         // each node starts with an equal share of work
 
         Collective myCollective = pool.getCollective(me);
