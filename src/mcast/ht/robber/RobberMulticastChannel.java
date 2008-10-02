@@ -7,6 +7,7 @@ import ibis.ipl.PortType;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +17,7 @@ import mcast.ht.LocationPool;
 import mcast.ht.Pool;
 import mcast.ht.admin.PieceIndexSet;
 import mcast.ht.admin.PieceIndexSetFactory;
+import mcast.ht.net.Doorbell;
 import mcast.ht.net.IndividualConnectionNegotiator;
 import mcast.ht.net.P2PConnectionFactory;
 import mcast.ht.net.P2PConnectionNegotiator;
@@ -104,8 +106,13 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
                 mcast.ht.bittorrent.Config.MAX_PENDING_REQUESTS);
     }
 
-    public static PortType getPortType() {
-        return RobberConnection.getPortType();
+    public static List<PortType> getPortTypes() {
+        List<PortType> result = new LinkedList<PortType>();
+        
+        result.add(RobberConnection.getPortType());
+        result.add(Doorbell.getPortType());
+        
+        return result;
     }
     
     protected void doMulticastStorage(Storage storage, 
