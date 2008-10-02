@@ -27,18 +27,17 @@ public class Doorbell implements ReceivePortConnectUpcall {
             PortType.CONNECTION_MANY_TO_ONE, 
             PortType.CONNECTION_UPCALLS,
             PortType.RECEIVE_EXPLICIT, 
-            PortType.SERIALIZATION_OBJECT);
+            PortType.SERIALIZATION_BYTE);
     
-    private Object me;
-    private Ibis ibis;
-    private String name;
-    private DoorbellHandler doorbellHandler;
-    private ReceivePort rport;
+    private final Ibis ibis;
+    private final String name;
+    private final DoorbellHandler doorbellHandler;
+    private final ReceivePort rport;
 
-    public Doorbell(Ibis ibis, String name, DoorbellHandler doorbellHandler) 
+    public Doorbell(Ibis ibis, String poolName, DoorbellHandler doorbellHandler) 
             throws IOException {
         this.ibis = ibis;
-        this.name = "doorbell-" + name;
+        this.name = "doorbell-" + poolName;
         this.doorbellHandler = doorbellHandler;
 
         if (logger.isDebugEnabled())
@@ -58,11 +57,9 @@ public class Doorbell implements ReceivePortConnectUpcall {
     public synchronized boolean ring(IbisIdentifier peer) throws IOException, 
             ConnectionTimedOutException
     {
-        logger.debug("ringing doorbell of host " + peer + "...");
+        SendPort peerDoorbell = ibis.createSendPort(portType);
         
-        String myName = me.toString();
-        
-        SendPort peerDoorbell = ibis.createSendPort(portType, myName);
+        logger.debug("ringing doorbell of " + peer + "...");
         
         try {
             peerDoorbell.connect(peer, name);
