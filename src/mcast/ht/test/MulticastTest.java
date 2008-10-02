@@ -5,6 +5,7 @@ import ibis.ipl.IbisIdentifier;
 import ibis.ipl.PortType;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 import mcast.ht.Pool;
@@ -14,7 +15,7 @@ public interface MulticastTest {
 
     public abstract String getName();
     
-    public abstract PortType getPortType();
+    public abstract List<PortType> getPortTypes();
     
     public abstract void setUp(Ibis ibis, Pool pool) throws IOException;
 
