@@ -4,7 +4,8 @@ import mcast.ht.ConfigProperties;
 
 interface Config {
 
-    static final String PROPERTY_PREFIX = "mcast.p2p.storage.";
+    static final String PROPERTY_PREFIX = 
+        mcast.ht.Config.PROPERTY_PREFIX + "storage.";
     static final String s_max_open_files = PROPERTY_PREFIX + "max_open_files";
     
     static ConfigProperties config = ConfigProperties.getInstance(); 

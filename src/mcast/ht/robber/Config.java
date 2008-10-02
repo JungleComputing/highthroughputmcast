@@ -8,7 +8,8 @@ interface Config {
 
     public Logger statsLogger = Logger.getLogger("mcast.stats.robber");
 
-    static final String PROPERTY_PREFIX = "mcast.robber.";
+    static final String PROPERTY_PREFIX = 
+        mcast.ht.Config.PROPERTY_PREFIX + "robber.";
 
     static final String s_local_min_peers = PROPERTY_PREFIX + "local_min_peers";
     static final String s_global_min_peers = PROPERTY_PREFIX + "global_min_peers";

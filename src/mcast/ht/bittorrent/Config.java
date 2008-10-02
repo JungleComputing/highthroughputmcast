@@ -11,7 +11,8 @@ public interface Config {
 
     public Logger statsLogger = Logger.getLogger("mcast.stats.bittorrent");
 
-    static final String PROPERTY_PREFIX = "mcast.bittorrent.";
+    static final String PROPERTY_PREFIX = 
+        mcast.ht.Config.PROPERTY_PREFIX + "bittorrent.";
 
     static final String s_min_peers = 
         PROPERTY_PREFIX + "min_peers";

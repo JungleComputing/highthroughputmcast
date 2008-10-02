@@ -3,7 +3,7 @@ package mcast.ht;
 
 public interface Config {
 
-    static final String PROPERTY_PREFIX = "mcast.p2p.";
+    static final String PROPERTY_PREFIX = "mcast.ht.";
 
 	static final String s_random_seed = PROPERTY_PREFIX + "random_seed";
 
