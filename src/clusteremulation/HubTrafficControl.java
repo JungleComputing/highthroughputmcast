@@ -128,7 +128,7 @@ public class HubTrafficControl extends AbstractTrafficControl implements Config 
 
             execute(true, "sudo", "/sbin/tc", "class", editCommand, "dev",
                     "myri0", "parent", "1:", "classid", "1:2", "htb", 
-                    "rate", bandwidthValue(inCap), " mtu", mtuValue(),
+                    "rate", bandwidthValue(inCap), "mtu", mtuValue(),
                     "burst", burstValue(inCap), "cburst", cburstValue(inCap));
 
             previous.updateIncomingClusterCapacity(myClusterName, inCap);
