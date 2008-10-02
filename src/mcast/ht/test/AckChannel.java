@@ -5,6 +5,7 @@ import ibis.ipl.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,9 +20,14 @@ public class AckChannel {
 
     private static Logger logger = Logger.getLogger(AckChannel.class);
 
-    public static final PortType PORT_TYPE = new PortType(
+    public static final PortType PORT_TYPE_ACK = new PortType(
             PortType.COMMUNICATION_FIFO,
             PortType.CONNECTION_ONE_TO_MANY,
+            PortType.RECEIVE_EXPLICIT,
+            PortType.SERIALIZATION_BYTE);
+
+    public static final PortType PORT_TYPE_ACK_ACK = new PortType(
+            PortType.COMMUNICATION_FIFO,
             PortType.CONNECTION_MANY_TO_ONE,
             PortType.RECEIVE_EXPLICIT,
             PortType.SERIALIZATION_BYTE);
@@ -35,6 +41,13 @@ public class AckChannel {
     private SendPort parentSport, childrenSport;
     private boolean synced;
 
+    /**
+     * 
+     * @param ibis
+     * @param pool
+     * @param name a unique name within this Ibis instance
+     * @throws IOException
+     */
     public AckChannel(Ibis ibis, Pool pool) throws IOException {
         logger.info("Creating binary tree ack channel");
 
@@ -73,7 +86,7 @@ public class AckChannel {
             logger.debug("creating receive port for my parent");
             
             String name = parentRportName(me, poolName, instanceCount);
-            parentRport = ibis.createReceivePort(PORT_TYPE, name);
+            parentRport = ibis.createReceivePort(PORT_TYPE_ACK, name);
             parentRport.enableConnections();
         }
 
@@ -81,20 +94,22 @@ public class AckChannel {
             logger.debug("creating receive port for my child(ren)");
 
             String name = childrenRportName(me, poolName, instanceCount);
-            childrenRport = ibis.createReceivePort(PORT_TYPE, name);
+            childrenRport = ibis.createReceivePort(PORT_TYPE_ACK_ACK, name);
             childrenRport.enableConnections();
         }
 
         if (parent != null) {
             logger.debug("connecting to my parent: " + parent);
 
-            parentSport = ibis.createSendPort(PORT_TYPE, me.name());
-            String name = childrenRportName(parent, poolName, instanceCount);
-            parentSport.connect(parent, name);
+            String sportName = parentSportName(poolName, instanceCount);
+            parentSport = ibis.createSendPort(PORT_TYPE_ACK_ACK, sportName);
+            String rportName = childrenRportName(parent, poolName, instanceCount);
+            parentSport.connect(parent, rportName);
         }
 
         if (!children.isEmpty()) {
-            childrenSport = ibis.createSendPort(PORT_TYPE, me.name());
+            String sportName = childrenSportName(poolName, instanceCount);
+            childrenSport = ibis.createSendPort(PORT_TYPE_ACK, sportName);
 
             for (IbisIdentifier child: children) {
                 String name = parentRportName(child, poolName, instanceCount);
@@ -109,19 +124,32 @@ public class AckChannel {
         instanceCounterMap.put(pool.getName(), nextInstanceCount);
     }
 
-    public static PortType getPortType() {
-        return PORT_TYPE;
+    public static List<PortType> getPortTypes() {
+        List<PortType> result = new LinkedList<PortType>();
+
+        result.add(PORT_TYPE_ACK);
+        result.add(PORT_TYPE_ACK_ACK);
+        
+        return result;
     }
         
+    private static String parentSportName(String groupID, int instanceCount) {
+        return "binack-parent-snd-{" + groupID + "}-[" + instanceCount + "]";
+    }
+
     private static String parentRportName(IbisIdentifier id, String groupID, 
             int instanceCount) {
-        return "binack-parent-" + id.name() + "-{" + groupID + "}-["
+        return "binack-parent-rcv-" + id.name() + "-{" + groupID + "}-["
                 + instanceCount + "]";
+    }
+
+    private static String childrenSportName(String groupID, int instanceCount) {
+        return "binack-child-snd-{" + groupID + "}-[" + instanceCount + "]";
     }
 
     private static String childrenRportName(IbisIdentifier id, String groupID, 
             int instanceCount) {
-        return "binack-child-" + id.name() + "-{" + groupID + "}-["
+        return "binack-child-rcv-" + id.name() + "-{" + groupID + "}-["
                 + instanceCount + "]";
     }
 
