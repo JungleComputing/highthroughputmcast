@@ -3,6 +3,7 @@ package clusteremulation;
 import ibis.util.RunProcess;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -132,16 +133,32 @@ public abstract class AbstractTrafficControl implements Observer {
         return corrected + "ms";
     }
 
+    private String buildString(String[] arr) {
+        StringBuilder b = new StringBuilder();
+        for (String s: arr) {
+            b.append(s);
+            b.append(' ');
+        }
+        return b.toString();
+    }
+    
     protected void execute(boolean failOnError, String... command) 
     throws IOException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Executing " + buildString(command));
+        }
+        
         RunProcess p = new RunProcess(command);
+        p.redirectErrorStream(true);
         p.run();
             
         int exitValue = p.getExitStatus();
 
         if (failOnError && exitValue != 0) {
-            throw new IOException("executing '" + command + "' returned " + 
-                    exitValue);
+            logger.error("Error executing " + buildString(command) + 
+                    ", output:\n" + new String(p.getStdout()));
+            throw new IOException("Executing '" + Arrays.toString(command) + 
+                    "' returned " + exitValue);
         }   
     }
 
