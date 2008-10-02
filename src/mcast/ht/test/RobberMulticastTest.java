@@ -4,6 +4,7 @@ import ibis.ipl.Ibis;
 import ibis.ipl.PortType;
 
 import java.io.IOException;
+import java.util.List;
 
 import mcast.ht.MulticastChannel;
 import mcast.ht.Pool;
@@ -15,8 +16,8 @@ public class RobberMulticastTest extends P2PMulticastTest {
         super(name);
     }
     
-    public PortType getPortType() {
-        return RobberMulticastChannel.getPortType();
+    public List<PortType> getPortTypes() {
+        return RobberMulticastChannel.getPortTypes();
     }
     
     protected MulticastChannel createChannel(Ibis ibis, Pool pool)

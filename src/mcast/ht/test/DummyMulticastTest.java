@@ -5,6 +5,8 @@ import ibis.ipl.IbisIdentifier;
 import ibis.ipl.PortType;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import mcast.ht.Pool;
@@ -16,8 +18,8 @@ public class DummyMulticastTest implements MulticastTest {
         return "dummy";
     }
 
-    public PortType getPortType() {
-        return new PortType();
+    public List<PortType> getPortTypes() {
+        return Collections.emptyList();
     }
     
     public void setUp(Ibis ibis, Pool pool) {

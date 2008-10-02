@@ -4,6 +4,7 @@ import ibis.ipl.Ibis;
 import ibis.ipl.PortType;
 
 import java.io.IOException;
+import java.util.List;
 
 import mcast.ht.MulticastChannel;
 import mcast.ht.Pool;
@@ -15,8 +16,8 @@ public class BitTorrentMulticastTest extends P2PMulticastTest {
         super(name);
     }
     
-    public PortType getPortType() {
-        return BitTorrentMulticastChannel.getPortType();
+    public List<PortType> getPortTypes() {
+        return BitTorrentMulticastChannel.getPortTypes();
     }
     
     protected MulticastChannel createChannel(Ibis ibis, Pool pool)
