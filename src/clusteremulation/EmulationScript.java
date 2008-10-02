@@ -8,7 +8,7 @@ import java.io.StreamTokenizer;
 import java.text.ParseException;
 import java.util.*;
 
-import mcast.p2p.util.Convert;
+import mcast.ht.util.Convert;
 
 import org.apache.log4j.Logger;
 

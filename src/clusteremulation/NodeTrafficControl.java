@@ -3,7 +3,7 @@ package clusteremulation;
 import java.io.IOException;
 import java.net.InetAddress;
 
-import mcast.p2p.util.Convert;
+import mcast.ht.util.Convert;
 
 import org.apache.log4j.Logger;
 

@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import mcast.p2p.util.Defense;
+import mcast.ht.util.Defense;
 
 import org.apache.log4j.Logger;
 

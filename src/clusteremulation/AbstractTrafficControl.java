@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.util.Observable;
 import java.util.Observer;
 
-import mcast.p2p.util.Convert;
-import mcast.p2p.util.Defense;
+import mcast.ht.util.Convert;
+import mcast.ht.util.Defense;
 
 import org.apache.log4j.Logger;
 
