@@ -1,6 +1,5 @@
 package mcast.ht;
 
-
 public interface Config {
 
     static final String PROPERTY_PREFIX = "mcast.ht.";
