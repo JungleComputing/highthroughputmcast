@@ -40,7 +40,7 @@ public class MulticastTester implements Config {
 	private static final String OPTION_TEST = "-test";
 	private static final String OPTION_DATA_SIZE = "-data";
 	private static final String OPTION_TIMES = "-times";
-	private static final String OPTION_ENV = "-env";
+	private static final String OPTION_SCRIPT = "-script";
 	private static final String OPTION_USE_CLUSTER_EMULATOR = "-use-cluster-emulator";
 	private static final String OPTION_FILE = "-file";
 	private static final String OPTION_VALIDATE = "-validate-storage";
@@ -53,7 +53,9 @@ public class MulticastTester implements Config {
 	private enum Test { BITTORRENT, ROBBER };
 
 	private static final IbisCapabilities REQ_CAPABILITIES = 
-	    new IbisCapabilities(IbisCapabilities.CLOSED_WORLD);
+	    new IbisCapabilities(IbisCapabilities.CLOSED_WORLD,
+	            IbisCapabilities.MEMBERSHIP_TOTALLY_ORDERED,
+	            IbisCapabilities.ELECTIONS_STRICT);
 	
 	/**
 	 * Array size limit of the IBM JIT
@@ -65,8 +67,8 @@ public class MulticastTester implements Config {
 	private PoolInfo pool;
 	private List<MulticastTest> tests;
 	private boolean meHub;
+	private boolean useClusterEmulator;
 	private Random random;
-	private AckChannel appAckChannel;
 	private AckChannel everybodyAckChannel;
 	private EmulationScript emulationScript;
 	private ClusterEmulation emulation;
@@ -78,6 +80,7 @@ public class MulticastTester implements Config {
 	    logger.info("Creating pool ...");
 		pool = new PoolInfo(null, true);
 		meHub = false;
+		this.useClusterEmulator = useClusterEmulator;
 		
 		if (envFile != null) {
 			logger.info("Reading emulation script " + envFile);
@@ -93,13 +96,14 @@ public class MulticastTester implements Config {
 		}
 
 		logger.info("Creating tests");
-        ArrayList<PortType> portTypeList = new ArrayList<PortType>();
+        Set<PortType> portTypeSet = new HashSet<PortType>();
+        portTypeSet.addAll(AckChannel.getPortTypes());
 		for (String testName : testNames.split(",")) {
 		    MulticastTest test = createTest(testName, meHub);
 		    tests.add(test);
-		    portTypeList.add(test.getPortType());
+		    portTypeSet.addAll(test.getPortTypes());
         }
-
+		
         logger.info("Starting emulation script");
         Thread t = new Thread(emulationScript, "EmulationScript");
         t.setDaemon(true);
@@ -107,21 +111,21 @@ public class MulticastTester implements Config {
         t.start();
 
 		logger.info("Creating Ibis");
-		PortType[] portTypes = portTypeList.toArray(new PortType[0]);
+		PortType[] portTypes = portTypeSet.toArray(new PortType[0]);
 		ibis = IbisFactory.createIbis(REQ_CAPABILITIES, null, portTypes);
 		
 		logger.info("Waiting until everybody joined");
 		Registry registry = ibis.registry();
 		registry.waitUntilPoolClosed();
         IbisIdentifier[] everybody = registry.joinedIbises();
-        int myRank = Arrays.asList(everybody).indexOf(ibis.identifier());
-		
-        logger.info("My rank: " + myRank);
         
-		logger.info("Creating pool");
+        logger.info("I am " + ibis.identifier());
+        logger.info("My rank is " + pool.rank());
+        
+        logger.info("Creating pool");
 		if (useClusterEmulator) {
-		    String[] clusterNames = emulationScript.getClusterNames();
-		    appPool = new RankPool("app", ibis, clusterNames, myRank);
+	        String[] clusterNames = emulationScript.getClusterNames();
+	        appPool = new RankPool("app", ibis, clusterNames, pool.rank());
 		} else {
 		    appPool = new LocationPool("app", everybody);		    
 		}
@@ -132,17 +136,15 @@ public class MulticastTester implements Config {
             Collective myCollective = appPool.getCollective(ibis.identifier());
             logger.info("I'm an application node in collective " + myCollective);
 			logger.info("Application pool: " + appPool);
-
-			appAckChannel = new AckChannel(ibis, appPool);
+			
+	        logger.info("Creating multicast channel(s)");
+	        for (MulticastTest test: tests) {
+	            test.setUp(ibis, appPool);
+	        }
 		} 
 
-		if (emulation == null) {
-			// all nodes are application nodes
-			everybodyAckChannel = appAckChannel;
-		} else {
-		    Pool everybodyPool = new LocationPool("everybody", everybody);
-			everybodyAckChannel = new AckChannel(ibis, everybodyPool);
-		}
+		Pool everybodyPool = new LocationPool("everybody", everybody);
+		everybodyAckChannel = new AckChannel(ibis, everybodyPool);
 
 		random = new Random(230979);
 	}
@@ -155,7 +157,7 @@ public class MulticastTester implements Config {
 	        return new DummyMulticastTest();
 	    }
         
-	    Test test = Test.valueOf(testName);
+	    Test test = Test.valueOf(testName.toUpperCase());
 
 	    switch(test) {
 	    case BITTORRENT:
@@ -392,18 +394,20 @@ public class MulticastTester implements Config {
 		logger.info("Ending Ibis");
 		ibis.end();
 
-		// wait a while for all the Ibis updates to propagate over the
-		// SmartSockets hubs...
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException ignored) {
-			// ignore
+		if (useClusterEmulator) {
+		    // wait a while for all the Ibis updates to propagate over the
+		    // SmartSockets hubs...
+    		try {
+    			Thread.sleep(5000);
+    		} catch (InterruptedException ignored) {
+    			// ignore
+    		}
 		}
-
-		// kill the hubs
+		
+    	// kill the hubs
 		if (emulation != null) {
-			logger.info("Ending cluster emulation");
-			emulation.end();
+		    logger.info("Ending cluster emulation");
+		    emulation.end();
 		}
 	}
 
@@ -461,12 +465,12 @@ public class MulticastTester implements Config {
 	public static void main(String[] argv) {
 		logger.info("Java version: " + System.getProperty("java.vm.vendor")
 				+ " " + System.getProperty("java.vm.version"));
-		logger.info("Classpath: " + System.getProperty("java.class.path"));
+		logger.debug("Classpath: " + System.getProperty("java.class.path"));
 
 		int times = 1;
 		int dataSize = 100; // bytes
 		String testNames = "";
-		String envFile = null;
+		String emulationScript = null;
 		boolean useClusterEmulator = true;
 		File dataFile = null;
 		boolean validate = false;
@@ -487,8 +491,8 @@ public class MulticastTester implements Config {
                     pieceSize = parseSize("piece size", argv[++i]);
 				} else if (argv[i].equals(OPTION_TEST)) {
 					testNames = argv[++i];
-				} else if (argv[i].equals(OPTION_ENV)) {
-					envFile = argv[++i];
+				} else if (argv[i].equals(OPTION_SCRIPT)) {
+					emulationScript = argv[++i];
 				} else if (argv[i].equals(OPTION_USE_CLUSTER_EMULATOR)) {
 					useClusterEmulator = parseBoolean(
 							"enabled/disable cluster emulator", argv[++i]);
@@ -510,10 +514,12 @@ public class MulticastTester implements Config {
 				}
 			}
 
-			MulticastTester test = new MulticastTester(testNames, envFile, 
+			MulticastTester test = new MulticastTester(testNames, emulationScript, 
 			        useClusterEmulator);
+			
 			test.run(times, dataSize, pieceSize, dataFile, fake, fill, 
 			        validate, tellBefore, tellAfter);
+
 			test.end();
 		} catch (Throwable e) {
 			e.printStackTrace();
