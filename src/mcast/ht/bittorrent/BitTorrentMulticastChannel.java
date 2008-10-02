@@ -5,6 +5,8 @@ import ibis.ipl.IbisIdentifier;
 import ibis.ipl.PortType;
 
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 
@@ -12,6 +14,7 @@ import mcast.ht.AbstractMulticastChannel;
 import mcast.ht.LocationPool;
 import mcast.ht.Pool;
 import mcast.ht.admin.PieceIndexSet;
+import mcast.ht.net.Doorbell;
 import mcast.ht.net.IndividualConnectionNegotiator;
 import mcast.ht.net.P2PConnectionNegotiator;
 import mcast.ht.net.P2PConnectionPool;
@@ -74,8 +77,13 @@ public class BitTorrentMulticastChannel extends AbstractMulticastChannel
         logger.info("- end game:              " + END_GAME);
     }
     
-    public static PortType getPortType() {
-        return BitTorrentConnection.getPortType();
+    public static List<PortType> getPortTypes() {
+        List<PortType> result = new LinkedList<PortType>();
+        
+        result.add(BitTorrentConnection.getPortType());
+        result.add(Doorbell.getPortType());
+        
+        return result;
     }
 
     protected void doMulticastStorage(Storage storage, 

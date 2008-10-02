@@ -141,8 +141,10 @@ implements Config, BitTorrentUpcall, P2PConnection {
         logger.info("enabling connections from " + peer);
 
         String rportName = createRportName(me, peer);
+        
         logger.debug("creating receive port " + rportName);
-        ReceivePort rport = ibis.createReceivePort(portType, rportName);
+        ReceivePort rport = ibis.createReceivePort(portType, rportName, 
+                communicator);
         
         rport.enableConnections();
         communicator.setReceivePort(rport);
