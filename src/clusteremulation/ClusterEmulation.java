@@ -47,8 +47,8 @@ public class ClusterEmulation implements Config {
     private static final String PROP_MODULES_DEFINE = PREFIX_MODULES
     + ".define";
 
-    private static final String NETWORK_NAMESERVER = "ns";
     private static final String NETWORK_VISUALIZATION = "viz";
+    private static final String NETWORK_NAMESERVER = "ns";
 
     private static Logger logger = Logger.getLogger(ClusterEmulation.class);
 
@@ -130,6 +130,7 @@ public class ClusterEmulation implements Config {
             IPAddressSet myHubAddrSet = clusterHubAddrs(myClusterIndex);
             initSmartSocketsApplication(myHubAddrSet);
 
+            logger.info("I am an application node in " + myCluster);
             logger.info("My hub is " + myHub + " (" + myHubAddrSet + ")");
 
             InetAddress[] myHubAddrs = myHubAddrSet.getAddresses();
@@ -140,7 +141,7 @@ public class ClusterEmulation implements Config {
             meHub = true;
             myCluster = clusters.get(pool.rank() - hostCount); 
             
-            logger.info("I'm the hub for cluster " + myCluster);
+            logger.info("I am the hub for cluster " + myCluster);
 
             IPAddressSet myAddrSet = pool.getIPAddressSet();
             initSmartSocketsHub(myAddrSet);
