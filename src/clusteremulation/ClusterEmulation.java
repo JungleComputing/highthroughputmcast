@@ -202,10 +202,9 @@ public class ClusterEmulation implements Config {
         } else {
             // When the fast local network is disabled, all communication with 
             // local nodes should also go via the cluster's hub node. This is 
-            // done by giving all nodes a different network name. The the hub 
-            // node of a cluster accept connections from all nodes in its 
-            // cluster, and each node accepts connections from the cluster's 
-            // hub node.
+            // done by giving all nodes a different network name. The hub node 
+            // of a cluster accept connections from all nodes in its cluster, 
+            // and each node accepts connections from the cluster's hub node.
             networkName = nodeNetworkName(myCluster, pool.rank());
             acceptedNetworks = NETWORK_NAMESERVER + "," + 
                     clusterNetworkName(myCluster);
