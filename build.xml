@@ -1,0 +1,43 @@
+<project name="highthroughputmcast" basedir="." default="jar">
+
+	<property name="srcdir" value="src"/>
+
+	<property name="jarfile" value="htmcast.jar"/>
+	<property name="builddir" value="build"/>
+	<property name="libdir" value="lib"/>
+
+	<target name="jar" depends="compile">
+		<delete failonerror="false" dir="${libdir}" />
+		<mkdir dir="${libdir}" />
+
+		<delete failonerror="false" file="${libdir}/${jarfile}" />
+		<jar jarfile="${libdir}/${jarfile}">
+			<fileset dir="${builddir}">
+				<include name="**/*.class" />
+			</fileset>
+		</jar>
+	</target>
+
+	<target name="compile">
+		<delete failonerror="false" dir="${builddir}" />
+		<mkdir dir="${builddir}" />
+	    
+		<javac 
+			srcdir="${srcdir}" 
+			destdir="${builddir}"
+			target="1.5"
+			debug="true">
+			<classpath>
+		    	<fileset dir="external">
+		   			<include name="**/*.jar"/>
+    			</fileset>
+    		</classpath>
+		</javac>		
+	</target>
+			
+	<target name="clean" description="Clean the distribution file(s)">
+		<delete failonerror="false" dir="${builddir}"/>
+        <delete failonerror="false" dir="${libdir}"/>
+	</target>
+		
+</project>
