@@ -64,4 +64,21 @@ public abstract class AbstractPool implements Pool {
         return Collections.unmodifiableList(Arrays.asList(ibises));
     }
 
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append('[');
+        
+        for (int i = 0; i < ibises.length; i++) {
+            if (i > 0) b.append(',');
+            b.append(i);
+            b.append(':');
+            b.append(ibises[i]);
+        }
+        
+        b.append(']');
+        
+        return b.toString();
+    }
+    
 }
