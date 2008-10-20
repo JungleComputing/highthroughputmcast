@@ -6,7 +6,6 @@ import ibis.ipl.IbisFactory;
 import ibis.ipl.IbisIdentifier;
 import ibis.ipl.PortType;
 import ibis.ipl.Registry;
-import ibis.poolInfo.PoolInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +29,7 @@ import org.apache.log4j.Logger;
 
 import clusteremulation.ClusterEmulation;
 import clusteremulation.EmulationScript;
+import clusteremulation.PoolInfo;
 
 public class MulticastTester implements Config {
 
@@ -78,7 +78,7 @@ public class MulticastTester implements Config {
         tests = new ArrayList<MulticastTest>();
 
 	    logger.info("Creating pool ...");
-		pool = new PoolInfo(null, true);
+		pool = PoolInfo.createPoolInfo();
 		meHub = false;
 		this.useClusterEmulator = useClusterEmulator;
 		
