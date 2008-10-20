@@ -426,8 +426,8 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
     }
 
     void printStats() {
-        int bytesSent = ManagementProperties.getMessageBytes(sport);
-        int bytesReceived = ManagementProperties.getMessageBytes(rport);
+        long bytesSent = ManagementProperties.getMessageBytes(sport);
+        long bytesReceived = ManagementProperties.getMessageBytes(rport);
 
         Config.statsLogger.info(me + " comm_stats " + peer + ": " + "sent " + 
                 Convert.bytesToMBytes(bytesSent) + " MB, received " +
