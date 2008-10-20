@@ -1,6 +1,5 @@
 package clusteremulation;
 
-import ibis.poolInfo.PoolInfo;
 import ibis.smartsockets.SmartSocketsProperties;
 import ibis.smartsockets.direct.DirectSocketAddress;
 import ibis.smartsockets.direct.IPAddressSet;
@@ -33,6 +32,7 @@ public class ClusterEmulation implements Config {
     private static final String PROP_NETWORKS_NAME = PREFIX_NETWORKS + ".name";
     //private static final String PROP_HUB_CLUSTERS = "smartsockets.hub.clusters";
     private static final String PROP_HUB_ADDRESSES = "smartsockets.hub.addresses";
+    private static final String PROP_SERVER_HUB_ADDRESSES = "ibis.server.hub.addresses";
     private static final String PROP_HUB_DISCOVERY_ALLOWED = "smartsockets.discovery.allowed";
     //private static final String PROP_CLUSTER_MEMBER = "smartsockets.cluster.member";
     //private static final String PROP_HUB_SEND_BUFFER = "smartsockets.hub.sendbuffer";
@@ -44,8 +44,7 @@ public class ClusterEmulation implements Config {
     //private static final String PROP_CONNECT_TIMEOUT = "smartsockets.timeout.connect";
 
     private static final String PREFIX_MODULES = "smartsockets.modules";
-    private static final String PROP_MODULES_DEFINE = PREFIX_MODULES
-    + ".define";
+    private static final String PROP_MODULES_DEFINE = PREFIX_MODULES + ".define";
 
     private static final String NETWORK_VISUALIZATION = "viz";
     private static final String NETWORK_NAMESERVER = "ns";
@@ -72,7 +71,6 @@ public class ClusterEmulation implements Config {
     
     private final EmulationGauge gauge;
     private Hub myHub;
-    private boolean meHub;
 
     /**
      * Creates a cluster emulation. The cluster layout is based on the clusters
@@ -120,32 +118,38 @@ public class ClusterEmulation implements Config {
         // create the gauge in which the script will store the values
         gauge = new EmulationGauge(clusterNames);
         script.addObserver(gauge);
-        
+
         if (pool.rank() < script.getHostCount()) {
             // I'm an application node
-            meHub = false;
+            myHub = null;
             myCluster = clusterNames[pool.rank()];
             int myClusterIndex = clusters.indexOf(myCluster);            
             
+            // init SmartSockets properties for an application node
             IPAddressSet myHubAddrSet = clusterHubAddrs(myClusterIndex);
             initSmartSocketsApplication(myHubAddrSet);
 
             logger.info("I am an application node in " + myCluster);
-            logger.info("My hub is " + myHub + " (" + myHubAddrSet + ")");
+            logger.info("My hub is " + myHubAddrSet);
 
             InetAddress[] myHubAddrs = myHubAddrSet.getAddresses();
 
             new NodeTrafficControl(gauge, EMULATE_BANDWIDTH, myHubAddrs, pool.rank());
         } else {
             // I'm a hub node
-            meHub = true;
             myCluster = clusters.get(pool.rank() - hostCount); 
             
             logger.info("I am the hub for cluster " + myCluster);
 
-            IPAddressSet myAddrSet = pool.getIPAddressSet();
+            // init SmartSockets properties for a hub node
+            IPAddressSet myAddrSet = pool.getIPAddressSet(pool.rank());
             initSmartSocketsHub(myAddrSet);
 
+            // start a SmartSockets hub
+            TypedProperties p = SmartSocketsProperties.getDefaultProperties();
+            myHub = new Hub(p);
+
+            // start the traffic control on a hub
             Map<String, InetAddress[]> clusterHubMap = new HashMap<String, InetAddress[]>();
 
             for (int i = 0; i < clusters.size(); i++) {
@@ -170,7 +174,7 @@ public class ClusterEmulation implements Config {
     }
     
     public boolean meHub() {
-        return meHub;
+        return myHub != null;
     }
 
     public EmulatedGauge getGauge() {
@@ -210,7 +214,7 @@ public class ClusterEmulation implements Config {
                     clusterNetworkName(myCluster);
         }
 
-        initSmartSocketsCommonProperties(networkName, acceptedNetworks);
+        initSmartSocketsCommonProperties(myHubAddrSet, networkName, acceptedNetworks);
 
         initProperty(PROP_NETWORKS_NAME, networkName);
         // initProperty(PROP_CLUSTER_MEMBER, myCluster);
@@ -251,7 +255,7 @@ public class ClusterEmulation implements Config {
             acceptedNetworks += "," + NETWORK_VISUALIZATION;
         }
 
-        initSmartSocketsCommonProperties(networkName, acceptedNetworks);
+        initSmartSocketsCommonProperties(myAddrSet, networkName, acceptedNetworks);
 
         initProperty(PROP_NETWORKS_NAME, networkName);
         //initProperty(PROP_HUB_CLUSTERS, myCluster);
@@ -266,10 +270,6 @@ public class ClusterEmulation implements Config {
         // factory will connect to the local hub instead of a hub
         // on another node. This makes the visualisation more sensible.
         initProperty(PROP_HUB_ADDRESSES, allHubAddressesStartingWith(myAddrSet)); 
-
-        TypedProperties p = SmartSocketsProperties.getDefaultProperties();
-
-        myHub = new Hub(p);
 
         logger.info("Hub node initialized");
     }
@@ -346,8 +346,8 @@ public class ClusterEmulation implements Config {
         return DirectSocketAddress.getByAddress(addrSet, HUB_PORT);
     }
 
-    private void initSmartSocketsCommonProperties(String networkName,
-            String acceptedNetworks)
+    private void initSmartSocketsCommonProperties(IPAddressSet myHubAddrSet,
+            String networkName, String acceptedNetworks)
     {
         String propNetworksDefine = PREFIX_NETWORKS + ".define";
         String propFirewallDefault = PREFIX_NETWORKS + "." + networkName + 
@@ -357,14 +357,26 @@ public class ClusterEmulation implements Config {
         String propPreferenceDefault = PREFIX_NETWORKS + "." + networkName +
                 ".preference.default";
 
+        // Define our networks, such that nodes in the same virtual
+        // cluster cannot connect directly to nodes in other virtual clusters.
+        // Nodes in a virtual cluster can only connect directly to their hub.
         initProperty(propNetworksDefine, networkName + "," + acceptedNetworks);
         initProperty(propFirewallDefault, "deny");
         initProperty(propFirewallAccept, acceptedNetworks);
         initProperty(propPreferenceDefault, NETWORK_PREFERENCE);
 
+        // The ibis server does not run a hub, since otherwise all traffic will
+        // be routed via that hub and all traffic-shaping hubs will be bypassed.
+        // We therefore tell Ibis that it should use the hub of our virtual 
+        // cluster instead of the default one started by the ibis server.
+        String serverHubAddr = myHubAddrSet.toString() + "-" + HUB_PORT;
+        initProperty(PROP_SERVER_HUB_ADDRESSES, serverHubAddr);
+        
+        // we only need direct and hubrouted connections
         initProperty(PROP_MODULES_DEFINE, "direct,hubrouted");
         initProperty(PROP_HUB_DISCOVERY_ALLOWED, "false");
-        // initProperty(PROP_CONNECT_TIMEOUT, "10000");
+        
+        //initProperty(PROP_CONNECT_TIMEOUT, "10000");
         //initProperty(PROP_SERVICELINK_SEND_BUFFER, Integer.toString(8 * 1024 * 1024));
         //initProperty(PROP_SERVICELINK_RECEIVE_BUFFER, Integer.toString(8 * 1024 * 1024));
     }
