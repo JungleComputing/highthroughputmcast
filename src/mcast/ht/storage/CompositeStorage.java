@@ -18,14 +18,6 @@ public class CompositeStorage implements Storage {
         storages.add(s);
     }
 
-    public void clear() 
-    throws IOException 
-    {
-        for (Storage s: storages) {
-            s.clear();
-        }
-    }
-
     public void close() 
     throws IOException
     {
