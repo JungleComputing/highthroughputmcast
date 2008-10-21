@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class IntegerStorage implements Storage {
+public class IntegerStorage implements VerifiableStorage {
 
     private volatile int value;
 
@@ -31,14 +31,6 @@ public class IntegerStorage implements Storage {
 
     public Piece createPiece(int index) {
         return PieceFactory.createPiece(index);
-    }
-
-    public int getAveragePieceSize() {
-        return Integer.SIZE;
-    }
-
-    public long getByteSize() throws IOException {
-        return Integer.SIZE; 
     }
 
     public byte[] getDigest() throws IOException {

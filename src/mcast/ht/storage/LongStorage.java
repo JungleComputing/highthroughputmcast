@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class LongStorage implements Storage {
+public class LongStorage implements VerifiableStorage {
 
     private volatile long value;
 
@@ -31,14 +31,6 @@ public class LongStorage implements Storage {
 
     public Piece createPiece(int index) {
         return PieceFactory.createPiece(index);
-    }
-
-    public int getAveragePieceSize() {
-        return Long.SIZE;
-    }
-
-    public long getByteSize() throws IOException {
-        return Long.SIZE;
     }
 
     public byte[] getDigest() throws IOException {

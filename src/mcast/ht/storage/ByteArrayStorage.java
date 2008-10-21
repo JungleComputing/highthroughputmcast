@@ -8,7 +8,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-public class ByteArrayStorage implements Storage {
+public class ByteArrayStorage implements VerifiableStorage {
 
     private final byte[] data;
     private final int dataOffset;
@@ -43,15 +43,7 @@ public class ByteArrayStorage implements Storage {
         return (int)Math.ceil(dataLength / (double)pieceSize);
     }
 
-    public int getAveragePieceSize() {
-        return pieceSize;
-    }
-
-    public long getByteSize() {
-        return dataLength;
-    }
-
-    public int getByteSize(int index) {
+    private int getByteSize(int index) {
         int pieceOffset = dataOffset + (index * pieceSize);
         return Math.min(pieceSize, dataOffset + dataLength - pieceOffset);
     }

@@ -13,17 +13,9 @@ public class RandomAccessFileStorage extends AbstractFileStorage {
     private static Logger logger = 
         Logger.getLogger(RandomAccessFileStorage.class);
 
-    private final long byteSize;
-    
-    public RandomAccessFileStorage(File file, long byteSize, int pieceSize, 
-            boolean readOnly) throws FileNotFoundException, IOException {
+    public RandomAccessFileStorage(File file, int pieceSize, boolean readOnly) 
+    throws FileNotFoundException, IOException {
         super(file, pieceSize, readOnly);
-
-        this.byteSize = byteSize;
-    }
-
-    public long getByteSize() {
-        return byteSize;
     }
 
     public void writeConsecutivePieces(int firstPieceIndex, List<byte[]> bytes)

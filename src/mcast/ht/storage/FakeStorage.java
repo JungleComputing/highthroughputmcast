@@ -20,7 +20,8 @@ public class FakeStorage implements Storage {
 
         noPieces = (int)Math.ceil(byteSize / (float)pieceSize);
 
-        logger.debug("created fake buffer of " + byteSize + " bytes = " + noPieces + " pieces");
+        logger.debug("created fake buffer of " + byteSize + " bytes = " + 
+                noPieces + " pieces");
 
         fakePiece = new byte[pieceSize];
     }
@@ -37,20 +38,8 @@ public class FakeStorage implements Storage {
         return PieceFactory.createPiece(index);
     }
 
-    public long getByteSize() {
-        return byteSize;
-    }
-
-    public byte[] getDigest() {
-        throw new UnsupportedOperationException("fake storage does not support digests");
-    }
-
     public int getPieceCount() {
         return noPieces;
-    }
-
-    public int getAveragePieceSize() {
-        return fakePiece.length;
     }
 
     public Piece readPiece(ReadMessage m) throws IOException {

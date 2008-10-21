@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class DoubleStorage implements Storage {
+public class DoubleStorage implements VerifiableStorage {
 
     private volatile double value;
 
@@ -31,14 +31,6 @@ public class DoubleStorage implements Storage {
 
     public Piece createPiece(int index) {
         return PieceFactory.createPiece(index);
-    }
-
-    public int getAveragePieceSize() {
-        return Double.SIZE;
-    }
-
-    public long getByteSize() throws IOException {
-        return Double.SIZE;
     }
 
     public byte[] getDigest() throws IOException {

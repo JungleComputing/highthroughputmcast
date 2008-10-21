@@ -15,7 +15,8 @@ import org.apache.log4j.Logger;
 /**
  * @author mathijs
  */
-public abstract class AbstractFileStorage implements Storage, ConsecutivePiecesWriter {
+public abstract class AbstractFileStorage 
+implements VerifiableStorage, ConsecutivePiecesWriter {
 
     protected static Logger logger = Logger.getLogger(RandomAccessFileStorage.class);
 
@@ -64,17 +65,6 @@ public abstract class AbstractFileStorage implements Storage, ConsecutivePiecesW
 
     public Piece createPiece(int index) {
         return PieceFactory.createPiece(index);
-    }
-
-    public int getAveragePieceSize() {
-        return pieceSize;
-    }
-
-    public abstract long getByteSize();
-
-    private int getByteSize(int index) {
-        int pieceOffset = index * pieceSize;
-        return Math.min(pieceSize, (int)(getByteSize() - pieceOffset));
     }
 
     public byte[] getDigest() throws IOException {

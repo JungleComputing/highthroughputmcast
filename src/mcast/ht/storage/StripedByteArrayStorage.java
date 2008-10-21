@@ -8,7 +8,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-public class StripedByteArrayStorage implements Storage {
+public class StripedByteArrayStorage implements VerifiableStorage {
 
     private final byte[][] data;
     private final int pieceSize;
@@ -40,10 +40,6 @@ public class StripedByteArrayStorage implements Storage {
 
     public void close() {
         // do nothing
-    }
-
-    public long getByteSize() {
-        return ((data.length - 1) * data[0].length) + data[data.length - 1].length;
     }
 
     private byte[][] checkData(byte[][] data) {
@@ -78,10 +74,6 @@ public class StripedByteArrayStorage implements Storage {
 
     public int getPieceCount() {
         return (piecesPerStripe * (data.length - 1)) + (int)Math.ceil(data[data.length - 1].length / (double)pieceSize);
-    }
-
-    public int getAveragePieceSize() {
-        return pieceSize;
     }
 
     public Piece createPiece(int index) {

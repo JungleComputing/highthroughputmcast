@@ -42,32 +42,10 @@ public interface Storage {
     public int getPieceCount();
     
     /**
-     * Returns the average size of a piece (in bytes)
-     */
-    public int getAveragePieceSize();
-
-    /**
-     * Returns a unique digest value of this storage.
-     * 
-     * @return a unique digest value of this storage.
-     */
-    public byte[] getDigest() throws IOException;
-
-    /**
-     * Returns the size of this storage in bytes. Only used for testing purposes.
-     */
-    public long getByteSize() throws IOException;
-
-    /**
      * Closes this storages, meaning no more pieces will be read out of it or
      * written into it. A storage implementation can use this method to free
      * resources.
      */
     public void close() throws IOException;
-
-    /**
-     * Sets all data in this storage to zero.
-     */
-    public void clear() throws IOException;
 
 }

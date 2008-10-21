@@ -4,8 +4,6 @@ import ibis.ipl.ReadMessage;
 import ibis.ipl.WriteMessage;
 
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 
 public class CompositeStorage implements Storage {
@@ -38,44 +36,6 @@ public class CompositeStorage implements Storage {
 
     public Piece createPiece(int index) {
         return PieceFactory.createPiece(index);
-    }
-
-    public int getAveragePieceSize() {
-        if (storages.isEmpty()) {
-            return 0;
-        }
-
-        int sum = 0;
-
-        for (Storage s: storages) {
-            sum += s.getAveragePieceSize();
-        }
-
-        return sum / storages.size();
-    }
-
-    public long getByteSize() throws IOException {
-        int result = 0;
-
-        for (Storage s: storages) {
-            result += s.getByteSize();
-        }
-
-        return result;
-    }
-
-    public byte[] getDigest() throws IOException {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("MD5");
-
-            for (Storage s: storages) {
-                digest.update(s.getDigest());
-            }
-
-            return digest.digest();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("no such digest algorithm: MD5", e);
-        }
     }
 
     public int getPieceCount() {
