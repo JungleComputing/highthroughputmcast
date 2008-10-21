@@ -8,6 +8,9 @@ import java.util.List;
 import ibis.ipl.IbisIdentifier;
 import ibis.ipl.impl.Location;
 
+import mcast.ht.Collective;
+import mcast.ht.LocationPool;
+
 import org.junit.Before;
 import org.junit.Test;
 
