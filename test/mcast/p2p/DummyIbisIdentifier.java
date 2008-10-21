@@ -5,7 +5,6 @@ import ibis.ipl.Location;
 
 public class DummyIbisIdentifier implements IbisIdentifier {
 
-    private static final long serialVersionUID = 1L;
     private String poolName;
     private Location location;
     
