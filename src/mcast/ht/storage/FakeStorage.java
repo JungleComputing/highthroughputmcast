@@ -4,10 +4,11 @@ import ibis.ipl.ReadMessage;
 import ibis.ipl.WriteMessage;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-public class FakeStorage implements Storage {
+public class FakeStorage implements VerifiableStorage {
 
     private static Logger logger = Logger.getLogger(FakeStorage.class);
 
@@ -27,7 +28,7 @@ public class FakeStorage implements Storage {
     }
 
     public void clear() {
-        // do nothing
+        Arrays.fill(fakePiece, (byte)0);
     }
 
     public void close() {
@@ -42,6 +43,10 @@ public class FakeStorage implements Storage {
         return noPieces;
     }
 
+    public byte[] getDigest() {
+        throw new UnsupportedOperationException("a fake storage cannot create a digest");
+    }
+    
     public Piece readPiece(ReadMessage m) throws IOException {
         int index = m.readInt();
         int length = getByteSize(index);
