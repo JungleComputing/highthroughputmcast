@@ -21,7 +21,6 @@ import mcast.ht.RankPool;
 import mcast.ht.storage.ByteArrayStorage;
 import mcast.ht.storage.FakeStorage;
 import mcast.ht.storage.RandomAccessFileStorage;
-import mcast.ht.storage.Storage;
 import mcast.ht.storage.StripedByteArrayStorage;
 import mcast.ht.storage.VerifiableStorage;
 import mcast.ht.util.Convert;
