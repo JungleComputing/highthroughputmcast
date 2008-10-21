@@ -44,6 +44,10 @@ public class MemoryMappedFileStorage extends AbstractFileStorage {
         super.close();
     }
 
+    public long getByteSize() {
+        return byteSize;
+    }
+
     public void writeConsecutivePieces(int firstPieceIndex, List<byte[]> bytes)
             throws IOException {
         if (logger.isDebugEnabled()) {
