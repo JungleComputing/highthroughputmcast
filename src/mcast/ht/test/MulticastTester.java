@@ -23,6 +23,7 @@ import mcast.ht.storage.FakeStorage;
 import mcast.ht.storage.RandomAccessFileStorage;
 import mcast.ht.storage.Storage;
 import mcast.ht.storage.StripedByteArrayStorage;
+import mcast.ht.storage.VerifiableStorage;
 import mcast.ht.util.Convert;
 
 import org.apache.log4j.Logger;
@@ -181,7 +182,7 @@ public class MulticastTester implements Config {
 		return Convert.round(mbytesPerSec, 2) + " MB/s";
 	}
 
-	private Storage createStorage(int bytes, File file, boolean fake, 
+	private VerifiableStorage createStorage(int bytes, File file, boolean fake, 
 	        int pieceSize, boolean fill) {
 		logger.info("generating storage of "
 				+ Convert.round(Convert.bytesToMBytes(bytes), 2) + " MB...");
@@ -256,7 +257,7 @@ public class MulticastTester implements Config {
 	        File file, boolean fake, boolean fill, boolean validate, 
 	        String tellBefore, String tellAfter)
 	throws IOException, ParseException, NoSuchAlgorithmException {
-		Storage storage = null;
+		VerifiableStorage storage = null;
 		byte[] storageDigest = null;
 
 		logger.info(HR);
