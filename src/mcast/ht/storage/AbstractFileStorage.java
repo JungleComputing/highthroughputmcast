@@ -15,7 +15,8 @@ import org.apache.log4j.Logger;
 /**
  * @author mathijs
  */
-public abstract class AbstractFileStorage implements Storage, ConsecutivePiecesWriter {
+public abstract class AbstractFileStorage 
+implements VerifiableStorage, ConsecutivePiecesWriter {
 
     protected static Logger logger = Logger.getLogger(RandomAccessFileStorage.class);
 
