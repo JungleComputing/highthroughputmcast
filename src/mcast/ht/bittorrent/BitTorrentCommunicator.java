@@ -237,8 +237,10 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
 
     protected void sendMessage(byte opcode, int payload) throws IOException {
         if (sendingStopped) {
-            logger.warn("not sending " + messageName(opcode) + "(" + payload
-                    + ") because we stopped");
+            if (logger.isDebugEnabled()) {
+                logger.debug("not sending " + messageName(opcode) + "(" + payload
+                        + ") because we stopped");
+            }
             return;
         }
 
@@ -262,11 +264,12 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
     }
 
     protected void sendPieceIndexSetMessage(byte opcode,
-            PieceIndexSet pieceIndices) throws IOException
-            {
+            PieceIndexSet pieceIndices) throws IOException {
         if (sendingStopped) {
-            logger.warn("not sending " + messageName(opcode)
-                    + " because we stopped");
+            if (logger.isDebugEnabled()) {
+                logger.debug("not sending " + messageName(opcode)
+                        + " because we stopped");
+            }
             return;
         }
 
