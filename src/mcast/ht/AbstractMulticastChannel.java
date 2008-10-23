@@ -45,6 +45,12 @@ public abstract class AbstractMulticastChannel implements MulticastChannel {
     public synchronized void multicastStorage(Storage storage, 
             Set<IbisIdentifier> roots) throws IOException {
 
+        Defense.checkNotNull(roots, "roots");
+
+        if (roots.isEmpty()) {
+            throw new IllegalArgumentException("the set of roots cannot be empty");
+        }
+
         PieceIndexSet myPossession = determinePossession(storage, roots);
         multicastStorage(storage, roots, myPossession);
     }
@@ -55,11 +61,6 @@ public abstract class AbstractMulticastChannel implements MulticastChannel {
         checkNotClosed();
 
         Defense.checkNotNull(storage, "storage");
-        Defense.checkNotNull(roots, "roots");
-
-        if (roots.isEmpty()) {
-            throw new IllegalArgumentException("the set of roots cannot be empty");
-        }
 
         if (!flushed) {
             // flush a previous multicast operation

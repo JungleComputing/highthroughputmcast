@@ -125,7 +125,8 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
 
         Collective myCollective = pool.getCollective(me);
         List<IbisIdentifier> myMembers = myCollective.getMembers();
-        boolean doStealing = Collections.disjoint(myMembers, roots);
+        
+        boolean doStealing = checkDoStealing(myMembers, roots);
 
         logger.info("I do stealing: " + doStealing);
 
@@ -154,6 +155,17 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
         admin.waitUntilAllPiecesReceived();
     }
 
+    private boolean checkDoStealing(List<IbisIdentifier> myMembers, 
+            Set<IbisIdentifier> roots) {
+        if (roots == null) {
+            // no set of root nodes supplied, which is the same as providing
+            // an empty set of roots. Result: we have to do work stealing.
+            return true;
+        } else {
+            return Collections.disjoint(myMembers, roots);
+        }
+    }
+    
     protected void doFlush() throws IOException {
         if (globalConnectionPool != null) {
             globalConnectionPool.stop();
