@@ -5,6 +5,7 @@ import ibis.ipl.IbisIdentifier;
 import java.io.IOException;
 import java.util.Set;
 
+import mcast.ht.admin.PieceIndexSet;
 import mcast.ht.storage.Storage;
 
 public interface MulticastChannel {
@@ -21,16 +22,40 @@ public interface MulticastChannel {
      * twice in a row without any flushes in between.
      * 
      * @param storage
-     *                the storage that contains the distributed data
+     *                the storage that contains the data to distribute
      * @param roots
      *                the set of root ibises that have a complete storage
-     *                available
+     *                available. This set cannot be empty.
      * @throws IOException
-     * @throws IbisException
      */
     public void multicastStorage(Storage storage, Set<IbisIdentifier> roots)
     throws IOException;
 
+    /**
+     * Sends all the data in storage to all members of this multicast channel.
+     * Which pieces this node already has is indicated in the 'possession' set.
+     * Optionally, a set of root nodes can be provided that are known to have
+     * all data (e.g. a completely filled storage). This set is used for small 
+     * optimizations (e.g. not doing work stealing each cluster that is known 
+     * to contain a root node). To guarantee termination, there should be at 
+     * least one collective in which all nodes together possess all pieces. 
+     * It is up to the application to ensure this is the case.
+     * 
+     * @param storage
+     *                the storage that contains the data to distribute
+     * @param roots
+     *                an optional set of root ibises that have a complete storage
+     *                available. This set can be empty or null if no root nodes
+     *                are known.
+     * @param possession
+     *                a set that contains the indices of all the complete pieces 
+     *                in the given storage
+     *                
+     * @throws IOException
+     */
+    public void multicastStorage(Storage storage, Set<IbisIdentifier> roots, 
+            PieceIndexSet possession) throws IOException;
+    
     /**
      * Flushes the last multicast operation. After this method returned, all
      * members of this channel have received all data, and the distributed
@@ -51,7 +76,6 @@ public interface MulticastChannel {
      * before closing this channel.
      * 
      * @throws IOException
-     * @throws IbisException
      */
     public void close() throws IOException;
 
