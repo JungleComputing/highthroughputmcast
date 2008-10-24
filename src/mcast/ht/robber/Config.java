@@ -16,6 +16,7 @@ interface Config {
     static final String s_work_dictator = PROPERTY_PREFIX + "work_dictator";
     static final String s_balance_booty = PROPERTY_PREFIX + "balance_booty";
     static final String s_stealing = PROPERTY_PREFIX + "stealing";
+    static final String s_test_connected = PROPERTY_PREFIX + "test_connected";
 
     static ConfigProperties config = ConfigProperties.getInstance();
     
@@ -35,5 +36,13 @@ interface Config {
     // whether to do stealing
     static final boolean STEALING = 
         config.getBooleanProperty(s_stealing, true);
+
+    // whether to generate a deterministic random communication graph, and
+    // test this graph for connectedness. If false, the communication graph
+    // is constructed in a distributed fashion, with each node connecting to
+    // five neighbors chosen uniformly at random. The resulting communication
+    // graphs are very likely to be connected, but it's not a 100% guarantee.
+    static final boolean TEST_CONNECTED = 
+        config.getBooleanProperty(s_test_connected, false);
 
 }

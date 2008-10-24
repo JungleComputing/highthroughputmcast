@@ -6,6 +6,7 @@ import ibis.ipl.PortType;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,7 +18,12 @@ import mcast.ht.LocationPool;
 import mcast.ht.Pool;
 import mcast.ht.admin.PieceIndexSet;
 import mcast.ht.admin.PieceIndexSetFactory;
+import mcast.ht.graph.AllOtherPeersGenerator;
+import mcast.ht.graph.DirectedGraph;
+import mcast.ht.graph.DirectedGraphFactory;
+import mcast.ht.graph.PossiblePeersGenerator;
 import mcast.ht.net.Doorbell;
+import mcast.ht.net.GraphConnectionNegotiator;
 import mcast.ht.net.IndividualConnectionNegotiator;
 import mcast.ht.net.P2PConnectionFactory;
 import mcast.ht.net.P2PConnectionNegotiator;
@@ -63,13 +69,33 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
             
             logger.info("connecting to local peers in " + localPoolName);
             
-            P2PConnectionNegotiator<RobberConnection> localNegotiator = 
-                new IndividualConnectionNegotiator<RobberConnection>(
-                    localPoolName, myMembers, ibis, connectionFactory, 
-                    LOCAL_MIN_PEERS);
+            P2PConnectionNegotiator<RobberConnection> n = null;
+            
+            if (TEST_CONNECTED) {
+                // create a deterministic random graph and test it for 
+                // connectedness
+                PossiblePeersGenerator<IbisIdentifier> peerGenerator = 
+                        new AllOtherPeersGenerator<IbisIdentifier>(myMembers);
 
-            localConnectionPool = 
-                new P2PConnectionPool<RobberConnection>(localNegotiator);
+                long seed = generateSeed(myMembers);
+
+                DirectedGraph<IbisIdentifier> g = null;
+                do {
+                    logger.debug("creating random local communication graph");
+                    g = DirectedGraphFactory.createMinDegreeRandomGraph(
+                            myMembers, LOCAL_MIN_PEERS, seed, peerGenerator);
+                    seed += 1;
+                } while (!g.isWeaklyConnected());
+                
+                n = new GraphConnectionNegotiator<RobberConnection>(g, ibis, 
+                        connectionFactory);
+            } else {
+                n = new IndividualConnectionNegotiator<RobberConnection>(
+                        localPoolName, myMembers, ibis, connectionFactory, 
+                        LOCAL_MIN_PEERS);
+            }
+            
+            localConnectionPool = new P2PConnectionPool<RobberConnection>(n);
         } else {
             logger.info("no local connections needed in collective " + 
                     myCollectiveName);
@@ -82,18 +108,39 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
             logger.info("connecting to global peers");
 
             PossiblePeersGenerator<IbisIdentifier> globalPeersGenerator = 
-                new GlobalPeersGenerator(pool);
+                    new GlobalPeersGenerator(pool);
 
-            List<IbisIdentifier> globalNodes = 
-                globalPeersGenerator.generatePossiblePeers(me);
+            List<IbisIdentifier> globalNodes =
+                    globalPeersGenerator.generatePossiblePeers(me);
             
-            P2PConnectionNegotiator<RobberConnection> globalNegotiator = 
-                new IndividualConnectionNegotiator<RobberConnection>(
+            P2PConnectionNegotiator<RobberConnection> n = null;
+            
+            if (TEST_CONNECTED) {
+                // create a deterministic random global graph and test it for 
+                // connectedness
+                long seed = generateSeed(participants);
+
+                DirectedGraph<IbisIdentifier> g = null;
+                DirectedGraph<Collective> c = null;
+                
+                do {
+                    g = DirectedGraphFactory.createMinDegreeRandomGraph(
+                            participants, GLOBAL_MIN_PEERS, seed, 
+                            globalPeersGenerator);
+                    seed += 1;
+                    c = createCollectiveGraph(g, pool);
+                } while (!c.isWeaklyConnected()); 
+                
+                n = new GraphConnectionNegotiator<RobberConnection>(g, ibis, 
+                        connectionFactory);
+            } else {
+                n = new IndividualConnectionNegotiator<RobberConnection>(
                         pool.getName(), globalNodes, ibis, connectionFactory, 
                         GLOBAL_MIN_PEERS);
-
+            }
+            
             globalConnectionPool = 
-                new P2PConnectionPool<RobberConnection>(globalNegotiator); 
+                new P2PConnectionPool<RobberConnection>(n); 
         } else {
             logger.info("no global connections needed");
             globalConnectionPool = null;
@@ -106,6 +153,44 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
                 mcast.ht.bittorrent.Config.MAX_PENDING_REQUESTS);
     }
 
+    private DirectedGraph<Collective> createCollectiveGraph(
+            DirectedGraph<IbisIdentifier> g, Pool pool) {
+        
+        // create map of ibisidentifier to collective
+        HashMap<IbisIdentifier, Collective> map = 
+            new HashMap<IbisIdentifier, Collective>();
+        
+        for (Collective c: pool.getAllCollectives()) {
+            for (IbisIdentifier id: c.getMembers()) {
+                map.put(id, c);
+            }
+        }
+        
+        // create collective graph
+        DirectedGraph<Collective> result = new DirectedGraph<Collective>();
+        
+        for (IbisIdentifier vertex: g.vertices()) {
+            Collective vertexCollective = map.get(vertex);
+            
+            for (IbisIdentifier peer: g.outgoingNeighbors(vertex)) {
+                Collective peerCollective = map.get(peer);
+                result.addEdge(vertexCollective, peerCollective);
+            }
+        }
+        
+        return result;
+    }
+    
+    private long generateSeed(List<IbisIdentifier> ibises) {
+        long seed = 0;
+        
+        for (IbisIdentifier ibis: ibises) {
+            seed += ibis.name().hashCode();
+        }
+        
+        return seed;
+    }
+        
     public static List<PortType> getPortTypes() {
         List<PortType> result = new LinkedList<PortType>();
         
@@ -157,7 +242,10 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
 
     private boolean checkDoStealing(List<IbisIdentifier> myMembers, 
             Set<IbisIdentifier> roots) {
-        if (roots == null) {
+        if (globalConnectionPool == null) {
+            // we have only one collective; no work stealing needed
+            return false;
+        } else if (roots == null) {
             // no set of root nodes supplied, which is the same as providing
             // an empty set of roots. Result: we have to do work stealing.
             return true;
