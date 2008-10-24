@@ -7,6 +7,7 @@ import java.util.List;
 
 import mcast.ht.Collective;
 import mcast.ht.Pool;
+import mcast.ht.graph.PossiblePeersGenerator;
 
 public class GlobalPeersGenerator 
 implements PossiblePeersGenerator<IbisIdentifier> {
