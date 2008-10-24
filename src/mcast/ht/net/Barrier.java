@@ -13,30 +13,41 @@ public class Barrier {
 
     private static Logger logger = Logger.getLogger(Barrier.class);
     
-    private static int barrierCount = 0;
+    private String name;
+    private int count;
     
-    public static synchronized void sync(Collection<IbisIdentifier> ibises, 
+    public Barrier(String name) {
+        this.name = name;
+        count = 0;
+    }
+    
+    private String createBallot(IbisIdentifier id) {
+        return name + "-" + id.name() + "-" + count;
+    }
+    
+    public synchronized void sync(Collection<IbisIdentifier> ibises, 
             Ibis ibis) throws IOException {
         
         IbisIdentifier me = ibis.identifier();
         Registry r = ibis.registry();
         
         logger.debug("announcing myself");
-        r.elect(me.name() + '-' + barrierCount);
+        String myBallot = createBallot(me);
+        r.elect(myBallot);
         
         for (IbisIdentifier id: ibises) {
             if (!id.equals(me)) {
-                String idName = id.name() + '-' + barrierCount;
+                String idBallot = createBallot(id);
                 
                 if (logger.isDebugEnabled()) {
-                    logger.debug("waiting for " + idName);
+                    logger.debug("waiting for " + idBallot);
                 }
                 
-                r.getElectionResult(idName);
+                r.getElectionResult(idBallot);
             }
         }
         
-        barrierCount++;
+        count++;
     }
     
 }

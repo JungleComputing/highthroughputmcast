@@ -58,7 +58,8 @@ implements P2PConnectionNegotiator<C>, DoorbellHandler, Config
         choosePeers(peerOptions, minPeers, seed);
 
         logger.debug("syncing");
-        Barrier.sync(ibises, ibis);
+        Barrier b = new Barrier(name);
+        b.sync(ibises, ibis);
 
         logger.info(name + "connecting to peers " + peers);
         connections = createConnections(peers, ibis, connectionFactory);
