@@ -55,13 +55,11 @@ public class ApplicationRunner {
         
         meHub = emulation.meHub();
 
-        /*
         logger.info("Starting emulation script");
         Thread t = new Thread(emulationScript, "EmulationScript");
         t.setDaemon(true);
         t.setPriority(Thread.MAX_PRIORITY);
         t.start();
-        */
 
         if (meHub) {
             logger.info("I'm a hub node for the cluster emulation");
@@ -116,16 +114,19 @@ public class ApplicationRunner {
             // Invoke
             try {
                 applicationMain.invoke(null, new Object[] { applicationArgs });
-            } catch (Exception e) {
-                System.out.println("Could not invoke main: " + e);
+            } catch (Throwable e) {
+                System.out.println("Got exception in main: " + e);
                 e.printStackTrace();
-                System.exit(1);
             }
         }
         
         // Barrier for everyone, also hubs
+        logger.info("Entering barrier ...");
         System.setProperty("ibis.pool.size", "" + pool.size());
         System.setProperty("ibis.pool.name", "barrier_" + System.getProperty("ibis.pool.name"));
         pool = PoolInfoClient.create();
+        logger.info("Exiting barrier ...");
+        // Exit explicitly, hubs are not daemon threads.
+        System.exit(0);
     }
 }

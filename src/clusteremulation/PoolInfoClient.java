@@ -57,7 +57,6 @@ import ibis.util.TypedProperties;
 public class PoolInfoClient extends PoolInfo {
     private String[] host_clusters;
 
-    private static PoolInfoClient instance;
     private Logger logger = Logger.getLogger(PoolInfoClient.class);
     
     /**
@@ -79,10 +78,7 @@ public class PoolInfoClient extends PoolInfo {
      * @return the <code>PoolInfoClient</code>.
      */
     public static PoolInfoClient create() {
-        if (instance == null) {
-            instance = new PoolInfoClient();
-        }
-        return instance;
+        return new PoolInfoClient();
     }
 
     private PoolInfoClient() {
