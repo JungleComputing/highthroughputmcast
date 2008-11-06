@@ -20,23 +20,49 @@ public class ApplicationRunner {
         // prevent construction.
     }
     
+    private static void usage() {
+        System.err.println("Usage: java clusteremulation.ApplicationRunner "
+                + "[ -tell-start | -[no-]tc ]* <emulationScript> <main class> ...");
+    }
+    
     public static void main(String[] args) {
+        
+        boolean tellStart = false;
+        boolean trafficShaping = true;
        
         logger.info("Examining options ...");
         
-        if (args.length < 2) {
-            System.err.println("Usage: java "
-                    + " clusteremulation.ApplicationRunner <emulationScript> <main class> ...");
-            System.exit(1);
+        int argc = 0;
+        
+        for (;;) {        
+            if (argc + 2 >= args.length) {
+                usage();
+                System.exit(1);
+            }
+            if (args[argc].equals("-tell-start")) {
+                tellStart = true;
+                argc++;
+            } else if (args[argc].equals("-tc")) {
+                trafficShaping = true;
+                argc++;
+            } else if (args[argc].equals("-no-tc")) {
+                trafficShaping = false;
+                argc++;
+            } else if (args[argc].startsWith("-")) {
+                usage();
+                System.exit(1);                
+            } else {
+                break;
+            }
         }
         
-        String emulationFile = args[0];
-        String className = args[1];
+        String emulationFile = args[argc];
+        String className = args[argc+1];
         
         // Create arguments array.
-        String[] applicationArgs = new String[args.length - 2];
+        String[] applicationArgs = new String[args.length - 2 - argc];
         for (int i = 0; i < applicationArgs.length; i++) {
-            applicationArgs[i] = args[i + 2];
+            applicationArgs[i] = args[i + 2 + argc];
         }
 
         logger.info("Creating pool ...");
@@ -55,11 +81,17 @@ public class ApplicationRunner {
         
         meHub = emulation.meHub();
 
-        logger.info("Starting emulation script");
-        Thread t = new Thread(emulationScript, "EmulationScript");
-        t.setDaemon(true);
-        t.setPriority(Thread.MAX_PRIORITY);
-        t.start();
+        if (trafficShaping) {
+            logger.info("Starting emulation script");
+            Thread t = new Thread(emulationScript, "EmulationScript");
+            t.setDaemon(true);
+            t.setPriority(Thread.MAX_PRIORITY);
+            t.start();
+
+            if (tellStart) {
+                emulationScript.tell("start");
+            }
+        }
 
         if (meHub) {
             logger.info("I'm a hub node for the cluster emulation");
