@@ -49,6 +49,7 @@ public class MulticastTester implements Config {
     private static final String OPTION_TELL_BEFORE = "-tell-before";
 	private static final String OPTION_TELL_AFTER = "-tell-after";
 	private static final String OPTION_PIECE_SIZE = "-pieces";
+    private static final String OPTION_ROOT_RANK = "-root";
     
 	private enum Test { BITTORRENT, ROBBER };
 
@@ -254,7 +255,7 @@ public class MulticastTester implements Config {
 
 	public void run(int times, int size, int pieceSize,
 	        File file, boolean fake, boolean fill, boolean validate, 
-	        String tellBefore, String tellAfter)
+	        String tellBefore, String tellAfter, int rootRank)
 	throws IOException, ParseException, NoSuchAlgorithmException {
 		VerifiableStorage storage = null;
 		byte[] storageDigest = null;
@@ -262,7 +263,7 @@ public class MulticastTester implements Config {
 		logger.info(HR);
 
 		IbisIdentifier me = ibis.identifier();
-        IbisIdentifier root = appPool.getEverybody().get(0);
+        IbisIdentifier root = appPool.getEverybody().get(rootRank);
 
         logger.info("Me:   " + me);
 
@@ -479,7 +480,8 @@ public class MulticastTester implements Config {
         String tellBefore = null;
 		String tellAfter = null;
 		int pieceSize = 32 * 1024;
-
+		int rootRank = 0;
+		
 		try {
 			for (int i = 0; i < argv.length; i++) {
 				if (false) {
@@ -508,6 +510,8 @@ public class MulticastTester implements Config {
 					tellBefore = argv[++i];
 				} else if (argv[i].equals(OPTION_TELL_AFTER)) {
 					tellAfter = argv[++i];
+                } else if (argv[i].equals(OPTION_ROOT_RANK)) {
+                    rootRank = parseInt("root rank", argv[++i]);
 				} else {
 					System.err.println("unknown option: " + argv[i]);
 					usage();
@@ -518,7 +522,7 @@ public class MulticastTester implements Config {
 			        useClusterEmulator);
 			
 			test.run(times, dataSize, pieceSize, dataFile, fake, fill, 
-			        validate, tellBefore, tellAfter);
+			        validate, tellBefore, tellAfter, rootRank);
 
 			test.end();
 		} catch (Throwable e) {
