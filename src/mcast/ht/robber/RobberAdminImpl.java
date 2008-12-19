@@ -181,21 +181,22 @@ implements RobberAdmin, Config
 
             // determine our new desire (everything part of our new work)
             newGold = interest.getGold();
-        }
 
-        // The new work sequence:
-
-        // 1. Send our new desire to all our global peers
-        for (RobberConnection c: globalConnections) {
-            c.sendDesire(newGold);
-        }
-
-        // 2. Notify all connections to global peers that we found new work.
-        // This initiated piece requests, if we found something we desire.
-        // We should notify global peers before local ones to avoid that
-        // a global peers steals our work before we had a change to request it.
-        for (RobberConnection c: globalConnections) {
-            c.receivedWork();
+            // The new work sequence:
+    
+            // 1. Send our new desire to all our global peers
+            for (RobberConnection c: globalConnections) {
+                c.sendDesire(newGold);
+            }
+    
+            // 2. Notify all connections to global peers that we found new work.
+            // This initiated piece requests, if we found something we desire.
+            // We should notify global peers before local ones to avoid that
+            // a local peer steals our work before we had a change to request 
+            // some pieces from it.
+            for (RobberConnection c: globalConnections) {
+                c.receivedWork();
+            }
         }
 
         // 3. Notify all local peers that we found new work
