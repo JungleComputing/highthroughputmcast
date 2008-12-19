@@ -34,6 +34,7 @@ implements RobberAdmin, Config
     private final List<RobberConnection> globalConnections;
     private final Random random;
     private volatile boolean stealingWork;
+    private volatile boolean allowStealing;
     private final List<IbisIdentifier> localLabourForce;
     private final PieceIndexSet pendingPieces;
 
@@ -51,13 +52,15 @@ implements RobberAdmin, Config
 
         this.localPeers = localPeers;
         this.doStealing = doStealing;
-
+        
         localConnectionMap = new HashMap<Object, RobberConnection>();
         globalConnections = new ArrayList<RobberConnection>();
 
         random = new Random(mcast.ht.Config.RANDOM_SEED);
 
         stealingWork = false;
+        allowStealing = true;
+
         localLabourForce = Collections.synchronizedList(
                 new LinkedList<IbisIdentifier>());
 
@@ -169,8 +172,10 @@ implements RobberAdmin, Config
 
         // revaluate all pieces in the booty in which we are still interested
         PieceIndexSet newGold = null;
-
+        
         synchronized(interest) {
+            allowStealing = false;
+
             interest.revaluate(booty);
 
             if (logger.isDebugEnabled()) {
@@ -181,24 +186,26 @@ implements RobberAdmin, Config
 
             // determine our new desire (everything part of our new work)
             newGold = interest.getGold();
+        }
+        
+        // The new work sequence:
 
-            // The new work sequence:
-    
-            // 1. Send our new desire to all our global peers
-            for (RobberConnection c: globalConnections) {
-                c.sendDesire(newGold);
-            }
-    
-            // 2. Notify all connections to global peers that we found new work.
-            // This initiated piece requests, if we found something we desire.
-            // We should notify global peers before local ones to avoid that
-            // a local peer steals our work before we had a change to request 
-            // some pieces from it.
-            for (RobberConnection c: globalConnections) {
-                c.receivedWork();
-            }
+        // 1. Send our new desire to all our global peers
+        for (RobberConnection c: globalConnections) {
+            c.sendDesire(newGold);
         }
 
+        // 2. Notify all connections to global peers that we found new work.
+        // This initiated piece requests, if we found something we desire.
+        // We should notify global peers before local ones to avoid that
+        // a local peer steals our work before we had a change to request 
+        // some pieces from it.
+        for (RobberConnection c: globalConnections) {
+            c.receivedWork();
+        }
+
+        allowStealing = true;
+        
         // 3. Notify all local peers that we found new work
         for (RobberConnection c: localConnectionMap.values()) {
             c.sendFoundWork();
@@ -208,6 +215,12 @@ implements RobberAdmin, Config
 
     public PieceIndexSet stealWork(double fraction) {
         synchronized(interest) {
+            if (!allowStealing) {
+                // we are executing the new work sequence, and do not allow
+                // local peers stealing our work in the meantime
+                return PieceIndexSetFactory.createEmptyPieceIndexSet();
+            }
+            
             PieceIndexSet booty = interest.devaluateFirst(fraction);
 
             if (logger.isDebugEnabled()) {
