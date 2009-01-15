@@ -45,7 +45,7 @@ implements RobberUpcall, Config {
     }
 
     @Override
-    public void init(Storage storage, P2PAdmin admin) {
+    public synchronized void init(Storage storage, P2PAdmin admin) {
         robberAdmin = (RobberAdmin)admin;
 
         super.init(storage, admin);
