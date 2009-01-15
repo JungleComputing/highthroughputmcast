@@ -43,8 +43,8 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
     private volatile SendPort sport;
     private volatile ReceivePort rport;
     private final String upcallName;
-    private volatile RateEstimate uploadRateEstimate;
-    private volatile RateEstimate downloadRateEstimate;
+    private final RateEstimate uploadRateEstimate;
+    private final RateEstimate downloadRateEstimate;
     private volatile boolean sendingStopped;
     private final Object sendingStoppedLock = new Object();
     private volatile boolean receivingStopped;
@@ -62,9 +62,13 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
 
         if (estimateDownloadRate) {
             downloadRateEstimate = new RateEstimate(RATE_ESTIMATE_PERIOD);
+        } else {
+            downloadRateEstimate = null;
         }
         if (estimateUploadRate) {
             uploadRateEstimate = new RateEstimate(RATE_ESTIMATE_PERIOD);
+        } else {
+            uploadRateEstimate = null;
         }
 
         upcallName = "R " + peer + " > " + me;
@@ -81,23 +85,26 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
         this.rport = rport;
     }
 
-    void start(Storage storage) {
-        if (storage == null) {
-            throw new NullPointerException("storage cannot be null");
-        }
-
-        logger.debug("start listening to " + peer);
-
-        // TODO
-        //		while (rport.connectedTo().length < 1) {
-        //			logger.info("peer " + peer
-        //					+ " did not connect yet, sleeping 1 sec...");
-        //			Threads.doSleep(1000);
-        //		}
-
+    /**
+     * Initializes this communicator. No other connections may be active during 
+     * this method (otherwise then may receive messages that lead to the sending
+     * of message on this connection, e.g. have() or done() messages).
+     */
+    void init(Storage storage) {
         this.storage = storage;
 
         sendingStopped = false;
+    }
+    
+    /**
+     * Starts this communicator. Note that other connections may already have
+     * been activated, which may lead to sendXXX() calls on this communicator.
+     * 
+     * @param storage the storage 
+     */
+    void start() {
+        logger.debug("start listening to " + peer);
+
         receivingStopped = false;
 
         rport.enableMessageUpcalls();
@@ -266,10 +273,8 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
     protected void sendPieceIndexSetMessage(byte opcode,
             PieceIndexSet pieceIndices) throws IOException {
         if (sendingStopped) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("not sending " + messageName(opcode)
+            logger.warn("not sending " + messageName(opcode)
                         + " because we stopped");
-            }
             return;
         }
 

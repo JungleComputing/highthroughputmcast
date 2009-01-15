@@ -164,7 +164,7 @@ implements Config, BitTorrentUpcall, P2PConnection {
 		communicator.setSendPort(sport);
     }
 
-    public void init(Storage storage, P2PAdmin admin) {
+    public synchronized void init(Storage storage, P2PAdmin admin) {
         if (logger.isDebugEnabled()) {
             logger.debug("initializing connection to " + peer);
         }
@@ -183,6 +183,8 @@ implements Config, BitTorrentUpcall, P2PConnection {
         peerStopped = false;
 
         piecePickTimer.reset();
+        
+        communicator.init(storage);
     }
 
     public void start() throws IOException {
@@ -196,7 +198,7 @@ implements Config, BitTorrentUpcall, P2PConnection {
         }
 
         // start listening to our peer
-        communicator.start(storage);
+        communicator.start();
 
         startCommunication();
 
