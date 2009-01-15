@@ -1,15 +1,20 @@
 package mcast.ht.util;
 
-import ibis.ipl.Managable;
 import ibis.ipl.NoSuchPropertyException;
+import ibis.ipl.ReceivePort;
+import ibis.ipl.SendPort;
 
 public class ManagementProperties {
 
 	private static final String MPROP_MESSAGE_BYTES = "MessageBytes";
 	
-	public static long getMessageBytes(Managable m) {
+	// N.B. we do not refer to Managable anymore, since this breaks the use
+	// of the latest Ibis trunk (where is has been renamed to Manageable)
+	// We therefore had to copy-paste several methods.
+	
+	public static long getMessageBytes(SendPort p) {
 		try {
-			String bytes = m.getManagementProperty(MPROP_MESSAGE_BYTES);
+			String bytes = p.getManagementProperty(MPROP_MESSAGE_BYTES);
 			return Long.parseLong(bytes);
 		} catch (NoSuchPropertyException e) {
 			throw new RuntimeException("Management property '" + 
@@ -17,13 +22,32 @@ public class ManagementProperties {
 		}
 	}
 	
-	public static void setMessageBytes(Managable m, long value) {
+    public static long getMessageBytes(ReceivePort p) {
+        try {
+            String bytes = p.getManagementProperty(MPROP_MESSAGE_BYTES);
+            return Long.parseLong(bytes);
+        } catch (NoSuchPropertyException e) {
+            throw new RuntimeException("Management property '" + 
+                    MPROP_MESSAGE_BYTES + " cannot be read", e);
+        }
+    }
+
+    public static void setMessageBytes(SendPort p, long value) {
 		try {
-			m.setManagementProperty(MPROP_MESSAGE_BYTES, String.valueOf(value));
+			p.setManagementProperty(MPROP_MESSAGE_BYTES, String.valueOf(value));
 		} catch (NoSuchPropertyException e) {
 			throw new RuntimeException("Management property '" + 
 					MPROP_MESSAGE_BYTES + " cannot be set", e);
 		}
 	}
+
+    public static void setMessageBytes(ReceivePort p, long value) {
+        try {
+            p.setManagementProperty(MPROP_MESSAGE_BYTES, String.valueOf(value));
+        } catch (NoSuchPropertyException e) {
+            throw new RuntimeException("Management property '" + 
+                    MPROP_MESSAGE_BYTES + " cannot be set", e);
+        }
+    }
 
 }
