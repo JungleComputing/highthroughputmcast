@@ -273,8 +273,10 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
     protected void sendPieceIndexSetMessage(byte opcode,
             PieceIndexSet pieceIndices) throws IOException {
         if (sendingStopped) {
-            logger.warn("not sending " + messageName(opcode)
-                        + " because we stopped");
+            if (logger.isDebugEnabled()) {
+                logger.debug("not sending " + messageName(opcode)
+                            + " because we stopped");
+            }
             return;
         }
 
