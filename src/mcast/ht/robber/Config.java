@@ -42,7 +42,9 @@ interface Config {
     // is constructed in a distributed fashion, with each node connecting to
     // five neighbors chosen uniformly at random. The resulting communication
     // graphs are very likely to be connected, but it's not a 100% guarantee.
+    // Besides guaranteed to deliver a connected communication graph, the 
+    // 'tested' connection setup is also faster.
     static final boolean TEST_CONNECTED = 
-        config.getBooleanProperty(s_test_connected, false);
+        config.getBooleanProperty(s_test_connected, true);
 
 }
