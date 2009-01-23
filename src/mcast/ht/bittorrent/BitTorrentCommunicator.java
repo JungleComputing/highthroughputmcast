@@ -94,6 +94,7 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
         this.storage = storage;
 
         sendingStopped = false;
+        receivingStopped = false;
     }
     
     /**
@@ -104,9 +105,6 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
      */
     void start() {
         logger.debug("start listening to " + peer);
-
-        receivingStopped = false;
-
         rport.enableMessageUpcalls();
     }
 
