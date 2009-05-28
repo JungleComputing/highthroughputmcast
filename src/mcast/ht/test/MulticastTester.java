@@ -27,9 +27,9 @@ import mcast.ht.util.Convert;
 
 import org.apache.log4j.Logger;
 
-import clusteremulation.ClusterEmulation;
-import clusteremulation.EmulationScript;
-import clusteremulation.PoolInfo;
+import clusteremulator.ClusterEmulator;
+import clusteremulator.script.EmulationScript;
+import clusteremulator.poolinfo.PoolInfo;
 
 public class MulticastTester implements Config {
 
@@ -72,7 +72,7 @@ public class MulticastTester implements Config {
 	private Random random;
 	private AckChannel everybodyAckChannel;
 	private EmulationScript emulationScript;
-	private ClusterEmulation emulation;
+	private ClusterEmulator emulator;
 	
 	public MulticastTester(String testNames, String envFile,
 			boolean useClusterEmulator) throws Exception {
@@ -89,10 +89,10 @@ public class MulticastTester implements Config {
 
 			if (useClusterEmulator) {
 				logger.info("Creating cluster emulation");
-				emulation = new ClusterEmulation(pool, emulationScript);
-				meHub = emulation.meHub();
+				emulator = new ClusterEmulator(pool, emulationScript);
+				meHub = emulator.meHub();
 			} else {
-				emulation = null;
+				emulator = null;
 			}
 		}
 
@@ -406,9 +406,9 @@ public class MulticastTester implements Config {
 		}
 		
     	// kill the hubs
-		if (emulation != null) {
+		if (emulator != null) {
 		    logger.info("Ending cluster emulation");
-		    emulation.end();
+		    emulator.end();
 		}
 	}
 
