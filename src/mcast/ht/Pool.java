@@ -2,7 +2,6 @@ package mcast.ht;
 
 import ibis.ipl.IbisIdentifier;
 
-import java.util.Collection;
 import java.util.List;
 
 public interface Pool {
@@ -13,6 +12,6 @@ public interface Pool {
     
     public Collective getCollective(IbisIdentifier member);
     
-    public Collection<Collective> getAllCollectives();
+    public List<Collective> getAllCollectives();
 
 }

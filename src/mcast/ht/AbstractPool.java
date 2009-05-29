@@ -3,7 +3,6 @@ package mcast.ht;
 import ibis.ipl.IbisIdentifier;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,8 +28,8 @@ public abstract class AbstractPool implements Pool {
     }
 
     @Override
-    public Collection<Collective> getAllCollectives() {
-       Collection<Collective> result = new LinkedList<Collective>();
+    public List<Collective> getAllCollectives() {
+       List<Collective> result = new LinkedList<Collective>();
        LinkedList<IbisIdentifier> l = new LinkedList<IbisIdentifier>();
        
        for (IbisIdentifier ibis: ibises) {

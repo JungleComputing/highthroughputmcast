@@ -33,6 +33,9 @@ implements Config, BitTorrentUpcall, P2PConnection {
             PortType.COMMUNICATION_RELIABLE,
             PortType.RECEIVE_AUTO_UPCALLS,
             PortType.SERIALIZATION_DATA);
+
+    public static final String MGMT_PROP_PIECED_SENT = "PiecesSent";
+    public static final String MGMT_PROP_PIECED_RCVD = "PiecesReceived";
     
     protected final String poolName;
     protected final IbisIdentifier me, peer;
@@ -259,14 +262,6 @@ implements Config, BitTorrentUpcall, P2PConnection {
 
     public Object getPeer() {
         return peer;
-    }
-
-    public double getDownloadBytesPerNanosec() {
-        return communicator.getDownloadBytesPerNanosec();
-    }
-
-    public double getUploadBytesPerNanosec() {
-        return communicator.getUploadBytesPerNanosec();
     }
 
     boolean peerChoked() {
@@ -586,21 +581,37 @@ implements Config, BitTorrentUpcall, P2PConnection {
         }
     }
 
-    public int getPiecesReceived() {
-        return piecesReceived;
+    @Override
+    public Number getManagementProperty(String key) {
+        if (MGMT_PROP_PIECED_SENT.equals(key)) {
+            return piecesSent;
+        } else if (MGMT_PROP_PIECED_RCVD.equals(key)) {
+            return piecesReceived;
+        } else {
+            return communicator.getManagementProperty(key);
+        }
     }
-
-    public int getPiecesSent() {
-        return piecesSent;
+    
+    @Override
+    public void setManagementProperty(String key, Number value) {
+        if (MGMT_PROP_PIECED_SENT.equals(key)) {
+            piecesSent = value.intValue();
+        } else if (MGMT_PROP_PIECED_RCVD.equals(key)) {
+            piecesReceived = value.intValue();
+        } else {
+            communicator.setManagementProperty(key, value);
+        }
     }
-
+    
     public String getRateStats() {
         if (choking) {
-            double upBytesNsec = communicator.getUploadBytesPerNanosec();
+            String upProp = BitTorrentCommunicator.MGMT_PROP_UPLOAD_RATE;
+            double upBytesNsec = communicator.getManagementProperty(upProp).doubleValue();
             double upMBSec = Convert.bytesPerNanosecToMBytesPerSec(upBytesNsec);
             String upRate = Convert.round(upMBSec, 2);
 
-            double downBytesNsec = communicator.getDownloadBytesPerNanosec();
+            String downProp = BitTorrentCommunicator.MGMT_PROP_DOWNLOAD_RATE;
+            double downBytesNsec = communicator.getManagementProperty(downProp).doubleValue();
             double downMBSec = Convert.bytesPerNanosecToMBytesPerSec(downBytesNsec);
             String downRate = Convert.round(downMBSec, 2);
 

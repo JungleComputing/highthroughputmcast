@@ -114,6 +114,10 @@ public class BitTorrentMulticastChannel extends AbstractMulticastChannel
     protected void doClose() throws IOException {
         connectionPool.close();
     }
+    
+    public long getLongTotal(String mgmtProperty) {
+        return connectionPool.getLongTotal(mgmtProperty);
+    }
 
     public synchronized void printStats() throws IOException {
         if (admin != null) {

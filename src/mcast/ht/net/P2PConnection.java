@@ -23,9 +23,9 @@ public interface P2PConnection {
 
     public Object getPeer();
 
-    public int getPiecesReceived();
+    public Number getManagementProperty(String key);
 
-    public int getPiecesSent();
+    public void setManagementProperty(String key, Number value);
 
     public void printStats(long totalTimeMillis);
 

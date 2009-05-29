@@ -18,6 +18,7 @@ import mcast.ht.LocationPool;
 import mcast.ht.Pool;
 import mcast.ht.admin.PieceIndexSet;
 import mcast.ht.admin.PieceIndexSetFactory;
+import mcast.ht.bittorrent.BitTorrentConnection;
 import mcast.ht.graph.AllOtherPeersGenerator;
 import mcast.ht.graph.DirectedGraph;
 import mcast.ht.graph.DirectedGraphFactory;
@@ -298,8 +299,17 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
     }
 
     private void printPieceOriginStats() {
-        int piecesReceivedLocal = getTotalPiecesReceived(localConnectionPool);
-        int piecesReceivedGlobal = getTotalPiecesReceived(globalConnectionPool);
+        String prop = BitTorrentConnection.MGMT_PROP_PIECED_RCVD;
+        
+        long piecesReceivedLocal = 0;
+        if (localConnectionPool != null) { 
+            localConnectionPool.getLongTotal(prop);
+        }
+        
+        long piecesReceivedGlobal = 0;
+        if (globalConnectionPool != null) {
+            globalConnectionPool.getLongTotal(prop);
+        }
 
         double totalPieces = admin.getNoTotalPieces();
 
@@ -314,20 +324,6 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
                 percReceivedGlobal + "%");
     }
 
-    private int getTotalPiecesReceived(Iterable<RobberConnection> connections) {
-        int result = 0;
-
-        if (connections != null) {
-            synchronized (connections) {
-                for (RobberConnection connection : connections) {
-                    result += connection.getPiecesReceived();
-                }
-            }
-        }
-
-        return result;
-    }
-
     protected void doClose() throws IOException {
         if (globalConnectionPool != null) {
             globalConnectionPool.close();
@@ -335,6 +331,21 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
         if (localConnectionPool != null) {
             localConnectionPool.close();
         }
+    }
+    
+    @Override
+    public long getLongTotal(String mgmtProperty) {
+        long localValue = 0;
+        if (localConnectionPool != null) {
+            localValue = localConnectionPool.getLongTotal(mgmtProperty);
+        }
+        
+        long globalValue = 0;
+        if (globalConnectionPool != null) {
+            globalValue = globalConnectionPool.getLongTotal(mgmtProperty);
+        }
+        
+        return localValue + globalValue;
     }
 
 }

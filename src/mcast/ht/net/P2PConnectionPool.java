@@ -77,5 +77,26 @@ public class P2PConnectionPool<C extends P2PConnection> implements Iterable<C> {
     public Iterator<C> iterator() {
         return negotiator.iterator();
     }
+    
+    public long getLongTotal(String mgmtProperty) {
+        long result = 0;
+
+        synchronized(negotiator) {
+            for (C connection : negotiator) {
+                Number n = connection.getManagementProperty(mgmtProperty); 
+                result += n.longValue();
+            }
+        }
+
+        return result;
+    }
+
+    public void setManagementProperty(String key, Number value) {
+        synchronized(negotiator) {
+            for (C connection : negotiator) {
+                connection.setManagementProperty(key, value);
+            }
+        }
+    }
 
 }

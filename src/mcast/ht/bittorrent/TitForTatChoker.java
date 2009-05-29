@@ -188,13 +188,23 @@ implements Config, InterestListener
             return 0;
         }
     }
+    
+    static int compareConnectionRate(BitTorrentConnection c1, 
+            BitTorrentConnection c2, String prop) 
+    {
+        double rate1 = c1.getManagementProperty(prop).doubleValue();
+        double rate2 = c2.getManagementProperty(prop).doubleValue();
+    
+        return compareRate(rate1, rate2);
+    }
 
+    
     private class DownloadRateComparator
     implements Comparator<BitTorrentConnection> {
         
         public int compare(BitTorrentConnection c1, BitTorrentConnection c2) {
-            return compareRate(c1.getDownloadBytesPerNanosec(), c2
-                    .getDownloadBytesPerNanosec());
+            String prop = BitTorrentCommunicator.MGMT_PROP_DOWNLOAD_RATE;
+            return compareConnectionRate(c1, c2, prop);
         }
 
     }
@@ -203,8 +213,8 @@ implements Config, InterestListener
     implements Comparator<BitTorrentConnection> {
 
         public int compare(BitTorrentConnection c1, BitTorrentConnection c2) {
-            return compareRate(c1.getUploadBytesPerNanosec(), c2
-                    .getUploadBytesPerNanosec());
+            String prop = BitTorrentCommunicator.MGMT_PROP_UPLOAD_RATE;
+            return compareConnectionRate(c1, c2, prop);
         }
 
     }

@@ -50,5 +50,9 @@ public class RateEstimate {
     public double getRatePerNanosec() {
         return rate;
     }
+    
+    public void setRatePerNanosec(double rate) {
+        this.rate = rate;
+    }
 
 }

@@ -2,6 +2,7 @@ package mcast.ht.bittorrent;
 
 import ibis.ipl.IbisIdentifier;
 import ibis.ipl.MessageUpcall;
+import ibis.ipl.NoSuchPropertyException;
 import ibis.ipl.ReadMessage;
 import ibis.ipl.ReceivePort;
 import ibis.ipl.SendPort;
@@ -37,6 +38,11 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
     private static final byte OPCODE_DONE = 9;
     private static final byte OPCODE_STOP = 10;
 
+    public static final String MGMT_PROP_BYTES_SENT = "BytesSent";
+    public static final String MGMT_PROP_BYTES_RCVD = "BytesReceived";
+    public static final String MGMT_PROP_UPLOAD_RATE = "UploadRate";     // in bytes per nanosec
+    public static final String MGMT_PROP_DOWNLOAD_RATE = "DownloadRate"; // in bytes per nanosec
+    
     private final IbisIdentifier me, peer;
     private final BitTorrentUpcall upcall;
     private volatile Storage storage;
@@ -417,19 +423,40 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
         logger.debug("connection to " + peer + " closed");
     }
 
-    double getDownloadBytesPerNanosec() {
-        if (downloadRateEstimate != null) {
-            return downloadRateEstimate.getRatePerNanosec();
-        } else {
-            throw new RuntimeException("no rate maintainance requested");
+    public Number getManagementProperty(String key) {
+        try {
+            if (MGMT_PROP_BYTES_SENT.equals(key)) {
+                String bytes = sport.getManagementProperty("Bytes");
+                return Long.parseLong(bytes);
+            } else if (MGMT_PROP_BYTES_RCVD.equals(key)) {
+                String bytes = rport.getManagementProperty("Bytes");
+                return Long.parseLong(bytes);
+            } else {
+                return null;
+            }
+        } catch (NoSuchPropertyException e) {
+            logger.warn("Incapable Ibis?", e);
+            return null;
         }
     }
-
-    double getUploadBytesPerNanosec() {
-        if (uploadRateEstimate != null) {
-            return uploadRateEstimate.getRatePerNanosec();
-        } else {
-            throw new RuntimeException("no rate maintainance requested");
+    
+    public void setManagementProperty(String key, Number value) {
+        try {
+            if (MGMT_PROP_BYTES_SENT.equals(key)) {
+                sport.setManagementProperty("Bytes", String.valueOf(value));
+            } else if (MGMT_PROP_BYTES_RCVD.equals(key)) {
+                rport.setManagementProperty("Bytes", String.valueOf(value));
+            } else if (MGMT_PROP_UPLOAD_RATE.equals(key)) {
+                double rate = value.doubleValue();
+                uploadRateEstimate.setRatePerNanosec(rate);
+            } else if (MGMT_PROP_DOWNLOAD_RATE.equals(key)) {
+                double rate = value.doubleValue();
+                downloadRateEstimate.setRatePerNanosec(rate);
+            } else {
+                // ignore property
+            }
+        } catch (NoSuchPropertyException e) {
+            logger.warn("Incapable Ibis?", e);
         }
     }
 

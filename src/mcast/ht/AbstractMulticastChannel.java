@@ -130,4 +130,6 @@ public abstract class AbstractMulticastChannel implements MulticastChannel {
 
     protected abstract void doClose() throws IOException;
 
+    public abstract long getLongTotal(String mgmtProperty);
+        
 }
