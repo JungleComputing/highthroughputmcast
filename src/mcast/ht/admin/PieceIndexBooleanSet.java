@@ -18,8 +18,10 @@ public class PieceIndexBooleanSet extends AbstractPieceIndexSet
     
     // Largest size of the boolean array for which is still cheaper to use
     // Ibis serialization (one byte per boolean) instead of converting booleans
-    // to bits.
-    private static final int TRADEOF_BOOLEAN_CONVERSION = 5;
+    // to bits. Conversion is disabled by default, since it generates too much
+    // computational overhead to sustain high throughput (i.e. several tens of
+    // MB/s)
+    private static final int TRADEOF_BOOLEAN_CONVERSION = Integer.MAX_VALUE;
     
     private boolean[] list;
     private int size;
