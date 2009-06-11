@@ -66,16 +66,38 @@ public abstract class AbstractPool implements Pool {
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
-        b.append('[');
         
-        for (int i = 0; i < ibises.length; i++) {
-            if (i > 0) b.append(',');
-            b.append(i);
+        List<Collective> collectives = getAllCollectives();
+        
+        int clusterRank = 0;
+        String clusterConcat = "";
+        
+        for (Collective c: collectives) {
+            b.append(clusterConcat);
+            b.append(clusterRank);
             b.append(':');
-            b.append(ibises[i]);
+            b.append(c.getName());
+            b.append(':');
+            
+            b.append('[');
+            
+            List<IbisIdentifier> members = c.getMembers();
+            int memberRank = 0;
+            String memberConcat = "";
+            
+            for (IbisIdentifier m: members) {
+                b.append(memberConcat);
+                b.append(memberRank);
+                b.append(':');
+                b.append(m.location());
+                memberConcat = ",";
+            }
+            
+            b.append(']');
+                       
+            clusterConcat = ", ";
+            clusterRank++;
         }
-        
-        b.append(']');
         
         return b.toString();
     }
