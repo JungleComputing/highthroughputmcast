@@ -16,6 +16,7 @@ import java.util.*;
 import mcast.ht.Collective;
 import mcast.ht.Config;
 import mcast.ht.LocationPool;
+import mcast.ht.MulticastChannel;
 import mcast.ht.Pool;
 import mcast.ht.RankPool;
 import mcast.ht.storage.ByteArrayStorage;
@@ -51,7 +52,7 @@ public class MulticastTester implements Config {
 	private static final String OPTION_PIECE_SIZE = "-pieces";
     private static final String OPTION_ROOT_RANK = "-root";
     
-	private enum Test { BITTORRENT, ROBBER };
+	private enum Test { BITTORRENT, MOB, ROBBER };
 
 	private static final IbisCapabilities REQ_CAPABILITIES = 
 	    new IbisCapabilities(IbisCapabilities.CLOSED_WORLD,
@@ -94,6 +95,16 @@ public class MulticastTester implements Config {
 			} else {
 				emulator = null;
 			}
+			
+			if (!meHub) {
+			    int myRank = pool.rank();
+			    String[] clusterNames = emulationScript.getClusterNames();
+			    String myCluster = clusterNames[myRank];
+			    
+			    String location = String.format("node%1$02d@%2$s", myRank, 
+			            myCluster);
+			    System.setProperty("ibis.location", location);
+			}
 		}
 
 		logger.info("Creating tests");
@@ -124,7 +135,7 @@ public class MulticastTester implements Config {
         logger.info("My rank is " + pool.rank());
         
         logger.info("Creating pool");
-		if (useClusterEmulator) {
+        if (useClusterEmulator) {
 	        String[] clusterNames = emulationScript.getClusterNames();
 	        appPool = new RankPool("app", ibis, clusterNames, pool.rank());
 		} else {
@@ -157,12 +168,14 @@ public class MulticastTester implements Config {
             // during testing.
 	        return new DummyMulticastTest();
 	    }
-        
+
 	    Test test = Test.valueOf(testName.toUpperCase());
 
 	    switch(test) {
 	    case BITTORRENT:
 	        return new BitTorrentMulticastTest(testName);
+	    case MOB:
+	        return new MobMulticastTest(testName);
 	    case ROBBER:
 	        return new RobberMulticastTest(testName);
 	    }
@@ -172,20 +185,20 @@ public class MulticastTester implements Config {
 
 	private String formatSeconds(long nanosec) {
 		double sec = Convert.nanosecToSec(nanosec);
-		return Convert.round(sec, 2) + " sec.";
+		return String.format("%1$.2f sec.", sec);
 	}
 
 	private String formatThroughput(long nanosec, long bytesSent) {
 		double sec = Convert.nanosecToSec(nanosec);
-		double mbytesPerSec = Convert
-		.bytesPerSecToMBytesPerSec(bytesSent / sec);
-		return Convert.round(mbytesPerSec, 2) + " MB/s";
+		double mbytesPerSec = 
+		    Convert.bytesPerSecToMBytesPerSec(bytesSent / sec);
+		return String.format("%1$.2f MB/s", mbytesPerSec);
 	}
 
 	private VerifiableStorage createStorage(int bytes, File file, boolean fake, 
 	        int pieceSize, boolean fill) {
-		logger.info("generating storage of "
-				+ Convert.round(Convert.bytesToMBytes(bytes), 2) + " MB...");
+		logger.info(String.format("generating storage of %1$.2f MB...",
+		        Convert.bytesToMBytes(bytes)));
 
 		if (file != null) {
 			logger.info("creating file storage");
@@ -295,6 +308,8 @@ public class MulticastTester implements Config {
 
 		Set<IbisIdentifier> roots = Collections.singleton(root);
 
+		CpuTimer cpuTimer = new CpuTimer();
+		
 		// run tests
 		for (int i = 0; i < times; i++) {
 			for (Iterator<MulticastTest> it = tests.iterator(); it.hasNext();) {
@@ -322,7 +337,9 @@ public class MulticastTester implements Config {
 				if (!meHub) {
 					logger.info("Run " + (i + 1) + " - " + times + " of "
 							+ test.getName());
+                    cpuTimer.start();
 					nanosec = test.timeMulticast(storage, roots);
+					cpuTimer.stop();
 				}
 
 				if (tellAfter != null && emulationScript != null) {
@@ -348,13 +365,17 @@ public class MulticastTester implements Config {
 						}
 					}
 
-					if (nanosec.length > 1) {
-						// print the time it took until we received everything
+                    String logPrefix = me + " " + test.getName() + "_" + 
+                            (i + 1) + " ";
+
+                    if (nanosec.length > 1) {
+
+                        // print the time it took until we received everything
 						long time = nanosec[0];
 
-						logger.info(me + " " + test.getName() + "_received_"
-								+ (i + 1) + ": " + formatSeconds(time) + " = "
-								+ formatThroughput(time, size));
+						logger.info(logPrefix + "received: " + 
+						        formatSeconds(time) + " = " + 
+						        formatThroughput(time, size));
 					}
 
 					if (me.equals(root)) {
@@ -363,14 +384,33 @@ public class MulticastTester implements Config {
 							// everything
 							long time = nanosec[nanosec.length - 1];
 
-							logger.info(test.getName() + "_multicast_" + 
-							        (i + 1) + ": " + formatSeconds(time) + 
-							        " = " + formatThroughput(time, size));
+							logger.info(logPrefix + "multicast: " + 
+							        formatSeconds(time) + " = " + 
+							        formatThroughput(time, size));
 						}
 					}
 
-					test.printStats();
+					MulticastChannel channel = test.getChannel();
+					if (channel != null) {
+					    channel.printStats(logPrefix);
+					}
+					
+					if (logger.isInfoEnabled()) {
+    					// print thread time stats
+    					long totalCpuTime = cpuTimer.getTotalCpuTime();
+    					int processors = cpuTimer.getProcessorCount();
+    					long timePerProc = totalCpuTime / processors;
+    					
+    					double totalMcastTime = nanosec[nanosec.length - 1];
 
+    					String perc = String.format("%1$.2f", 
+    					        timePerProc / totalMcastTime * 100.0);
+    					
+    					logger.info(logPrefix + "cpu_time: " + 
+    					        formatSeconds(timePerProc) + " = " + perc + 
+    					        " %");
+					}
+                	
 					logger.info(HR);
 				}
 			}
@@ -399,7 +439,7 @@ public class MulticastTester implements Config {
 		    // wait a while for all the Ibis updates to propagate over the
 		    // SmartSockets hubs...
     		try {
-    			Thread.sleep(5000);
+    			Thread.sleep(10000);
     		} catch (InterruptedException ignored) {
     			// ignore
     		}

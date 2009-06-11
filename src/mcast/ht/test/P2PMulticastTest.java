@@ -31,6 +31,11 @@ public abstract class P2PMulticastTest implements MulticastTest {
         ackChannel = new AckChannel(ibis, pool);
     }
     
+    @Override
+    public MulticastChannel getChannel() {
+        return channel;
+    }
+    
     protected abstract MulticastChannel createChannel(Ibis ibis, Pool pool) 
     throws IOException;
     
@@ -65,11 +70,6 @@ public abstract class P2PMulticastTest implements MulticastTest {
         result[1] = end - start;       // time until everybody received everything
 
         return result;
-    }
-
-    @Override
-    public void printStats() throws IOException {
-        channel.printStats();
     }
 
     @Override

@@ -8,22 +8,23 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import mcast.ht.MulticastChannel;
 import mcast.ht.Pool;
 import mcast.ht.storage.Storage;
 
 public interface MulticastTest {
 
-    public abstract String getName();
+    public String getName();
     
-    public abstract List<PortType> getPortTypes();
+    public List<PortType> getPortTypes();
     
-    public abstract void setUp(Ibis ibis, Pool pool) throws IOException;
+    public void setUp(Ibis ibis, Pool pool) throws IOException;
 
-    public abstract long[] timeMulticast(Storage storage, 
+    public long[] timeMulticast(Storage storage, 
             Set<IbisIdentifier> roots) throws IOException;
 
-    public abstract void printStats() throws IOException;
+    public MulticastChannel getChannel();
     
-    public abstract void close() throws IOException;
+    public void close() throws IOException;
 
 }

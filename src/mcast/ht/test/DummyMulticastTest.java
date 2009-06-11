@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import mcast.ht.MulticastChannel;
 import mcast.ht.Pool;
 import mcast.ht.storage.Storage;
 
@@ -32,8 +33,8 @@ public class DummyMulticastTest implements MulticastTest {
         return new long[0];
     }
 
-    public void printStats() throws IOException {
-        // do nothing
+    public MulticastChannel getChannel() {
+        return null;
     }
 
     public void close() throws IOException {
