@@ -18,11 +18,11 @@ import mcast.ht.LocationPool;
 import mcast.ht.Pool;
 import mcast.ht.admin.PieceIndexSet;
 import mcast.ht.admin.PieceIndexSetFactory;
-import mcast.ht.bittorrent.BitTorrentConnection;
 import mcast.ht.graph.AllOtherPeersGenerator;
 import mcast.ht.graph.DirectedGraph;
 import mcast.ht.graph.DirectedGraphFactory;
 import mcast.ht.graph.PossiblePeersGenerator;
+import mcast.ht.mob.MobStats;
 import mcast.ht.net.Doorbell;
 import mcast.ht.net.GraphConnectionNegotiator;
 import mcast.ht.net.IndividualConnectionNegotiator;
@@ -30,7 +30,6 @@ import mcast.ht.net.P2PConnectionFactory;
 import mcast.ht.net.P2PConnectionNegotiator;
 import mcast.ht.net.P2PConnectionPool;
 import mcast.ht.storage.Storage;
-import mcast.ht.util.Convert;
 
 import org.apache.log4j.Logger;
 
@@ -282,46 +281,9 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
         return result;
     }
 
-    public void printStats() throws IOException {
-        if (admin != null) {
-            if (localConnectionPool != null) {
-                localConnectionPool.printStats();
-            }
-
-            if (globalConnectionPool != null) {
-                globalConnectionPool.printStats();
-            }
-
-            printPieceOriginStats();
-
-            admin.printStats();
-        }
-    }
-
-    private void printPieceOriginStats() {
-        String prop = BitTorrentConnection.MGMT_PROP_PIECED_RCVD;
-        
-        long piecesReceivedLocal = 0;
-        if (localConnectionPool != null) { 
-            localConnectionPool.getLongTotal(prop);
-        }
-        
-        long piecesReceivedGlobal = 0;
-        if (globalConnectionPool != null) {
-            globalConnectionPool.getLongTotal(prop);
-        }
-
-        double totalPieces = admin.getNoTotalPieces();
-
-        String percReceivedLocal = 
-            Convert.round((double) piecesReceivedLocal / totalPieces * 100, 2);
-        String percReceivedGlobal = 
-            Convert.round((double) piecesReceivedGlobal / totalPieces * 100, 2);
-
-        Config.statsLogger.info(me + " pool_stats rcvd " + "local " + 
-                piecesReceivedLocal + " = " + percReceivedLocal + "% " + 
-                "global " + piecesReceivedGlobal + " = " + 
-                percReceivedGlobal + "%");
+    public void printStats(String prefix) throws IOException {
+        MobStats.printStats(Config.statsLogger, prefix, localConnectionPool, 
+                globalConnectionPool, admin);
     }
 
     protected void doClose() throws IOException {
@@ -333,19 +295,4 @@ public class RobberMulticastChannel extends AbstractMulticastChannel
         }
     }
     
-    @Override
-    public long getLongTotal(String mgmtProperty) {
-        long localValue = 0;
-        if (localConnectionPool != null) {
-            localValue = localConnectionPool.getLongTotal(mgmtProperty);
-        }
-        
-        long globalValue = 0;
-        if (globalConnectionPool != null) {
-            globalValue = globalConnectionPool.getLongTotal(mgmtProperty);
-        }
-        
-        return localValue + globalValue;
-    }
-
 }

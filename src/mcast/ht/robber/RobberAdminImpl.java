@@ -18,7 +18,6 @@ import mcast.ht.admin.SynchronizedPieceIndexSet;
 import mcast.ht.bittorrent.BitTorrentAdminImpl;
 import mcast.ht.net.P2PConnection;
 import mcast.ht.storage.Piece;
-import mcast.ht.util.Convert;
 
 import org.apache.log4j.Logger;
 
@@ -308,21 +307,21 @@ implements RobberAdmin, Config
     }
 
     @Override
-    public void printStats()
+    public void printStats(String prefix)
     throws IOException
     {
-        super.printStats();
+        super.printStats(prefix);
 
         String stealRequestedFailedPerc = stealRequestedCount == 0 ? "0" : 
-            Convert.round(stealRequestedAndFailedCount * 100 / 
-                    (double) stealRequestedCount, 2);
+            String.format("%1$.2f", stealRequestedAndFailedCount * 100 / 
+                    (double) stealRequestedCount);
 
         String stealReceivedFailedPerc = stealReceivedCount == 0 ? "0" : 
-            Convert.round(stealReceivedAndFailedCount * 100 / 
-                    (double) stealReceivedCount, 2);
+            String.format("%1$.2f", stealReceivedAndFailedCount * 100 / 
+                    (double) stealReceivedCount);
 
-        Config.statsLogger.info("steal_stats " + stolenByMe + " pieces in " +
-                stealRequestedCount + " requests by me (" +
+        Config.statsLogger.info(prefix + "steal_stats " + stolenByMe + 
+                " pieces in " +  stealRequestedCount + " requests by me (" +
                 stealRequestedAndFailedCount + " = " + 
                 stealRequestedFailedPerc + "% useless), " + stolenFromMe + 
                 " pieces in " + stealReceivedCount + " requests from me (" + 
