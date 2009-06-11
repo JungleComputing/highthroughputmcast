@@ -124,12 +124,9 @@ public abstract class AbstractMulticastChannel implements MulticastChannel {
     protected abstract void doMulticastStorage(Storage storage, 
             Set<IbisIdentifier> roots, PieceIndexSet possession) 
     throws IOException;
-
-
+    
     protected abstract void doFlush() throws IOException;
 
     protected abstract void doClose() throws IOException;
 
-    public abstract long getLongTotal(String mgmtProperty);
-        
 }
