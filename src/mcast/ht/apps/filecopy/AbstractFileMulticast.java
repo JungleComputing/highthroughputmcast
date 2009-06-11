@@ -84,7 +84,7 @@ public abstract class AbstractFileMulticast extends FileMulticast {
     throws Exception;
 
     public void end() throws Exception {
-        channel.printStats();
+        channel.printStats("");
         channel.close();
         ibis.end();
     }
