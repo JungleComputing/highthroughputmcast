@@ -14,8 +14,8 @@ public class MemoryUsage {
 
     static {
         Logger logger = Logger.getLogger(WriteCache.class);
-        logger.info("max. memory: " + 
-                Convert.round(Convert.bytesToMBytes(MAX), 2) + " MB");
+        double maxMB = Convert.bytesToMBytes(MAX);
+        logger.info(String.format("max. memory: %1$.2f MB", maxMB));  
     }
 
     /**
