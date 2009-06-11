@@ -30,6 +30,6 @@ public interface BitTorrentAdmin extends P2PAdmin {
 
     public void waitUntilAllPiecesReceived();
 
-    public void printStats() throws IOException;
+    public void printStats(String prefix) throws IOException;
 
 }

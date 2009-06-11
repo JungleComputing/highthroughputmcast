@@ -27,6 +27,6 @@ public interface P2PConnection {
 
     public void setManagementProperty(String key, Number value);
 
-    public void printStats(long totalTimeMillis);
+    public void printStats(String prefix, long totalTimeMillis);
 
 }

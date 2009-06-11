@@ -280,7 +280,7 @@ public class BitTorrentAdminImpl implements Config, BitTorrentAdmin {
         }
     }
 
-    public void printStats() throws IOException {
+    public void printStats(String prefix) throws IOException {
         // do nothing
     }
 

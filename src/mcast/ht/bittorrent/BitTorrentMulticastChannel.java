@@ -118,12 +118,14 @@ public class BitTorrentMulticastChannel extends AbstractMulticastChannel
     public long getLongTotal(String mgmtProperty) {
         return connectionPool.getLongTotal(mgmtProperty);
     }
+    
+    public void setManagementProperty(String key, Number value) {
+        connectionPool.setManagementProperty(key, value);
+    }
 
-    public synchronized void printStats() throws IOException {
-        if (admin != null) {
-            connectionPool.printStats();
-            admin.printStats();
-        }
+    public synchronized void printStats(String prefix) throws IOException {
+        BitTorrentStats.printStats(Config.statsLogger, prefix, connectionPool, 
+                admin);
     }
 
 }

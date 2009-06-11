@@ -14,8 +14,6 @@ import mcast.ht.admin.PieceIndexSet;
 import mcast.ht.admin.PieceIndexSetFactory;
 import mcast.ht.storage.Piece;
 import mcast.ht.storage.Storage;
-import mcast.ht.util.Convert;
-import mcast.ht.util.ManagementProperties;
 
 import org.apache.log4j.Logger;
 
@@ -431,6 +429,10 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
             } else if (MGMT_PROP_BYTES_RCVD.equals(key)) {
                 String bytes = rport.getManagementProperty("Bytes");
                 return Long.parseLong(bytes);
+            } else if (MGMT_PROP_UPLOAD_RATE.equals(key)) {
+                return uploadRateEstimate.getRatePerNanosec();
+            } else if (MGMT_PROP_DOWNLOAD_RATE.equals(key)) {
+                return downloadRateEstimate.getRatePerNanosec();
             } else {
                 return null;
             }
@@ -458,18 +460,6 @@ public class BitTorrentCommunicator implements Config, MessageUpcall {
         } catch (NoSuchPropertyException e) {
             logger.warn("Incapable Ibis?", e);
         }
-    }
-
-    void printStats() {
-        long bytesSent = ManagementProperties.getMessageBytes(sport);
-        long bytesReceived = ManagementProperties.getMessageBytes(rport);
-
-        Config.statsLogger.info(me + " comm_stats " + peer + ": " + "sent " + 
-                Convert.bytesToMBytes(bytesSent) + " MB, received " +
-                Convert.bytesToMBytes(bytesReceived) + " MB");
-
-        ManagementProperties.setMessageBytes(sport, 0);
-        ManagementProperties.setMessageBytes(rport, 0);
     }
 
     public boolean equals(Object o) {

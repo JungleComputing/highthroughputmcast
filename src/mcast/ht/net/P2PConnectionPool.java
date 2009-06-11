@@ -29,11 +29,11 @@ public class P2PConnectionPool<C extends P2PConnection> implements Iterable<C> {
         }
     }
 
-    public void printStats() {
+    public void printStats(String prefix) {
         synchronized (negotiator) {
             // print stats of each connection separately
             for (C connection : negotiator) {
-                connection.printStats(runtimeMillis);
+                connection.printStats(prefix, runtimeMillis);
             }
         }
     }

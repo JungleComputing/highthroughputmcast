@@ -34,8 +34,8 @@ implements Config, BitTorrentUpcall, P2PConnection {
             PortType.RECEIVE_AUTO_UPCALLS,
             PortType.SERIALIZATION_DATA);
 
-    public static final String MGMT_PROP_PIECED_SENT = "PiecesSent";
-    public static final String MGMT_PROP_PIECED_RCVD = "PiecesReceived";
+    public static final String MGMT_PROP_PIECES_SENT = "PiecesSent";
+    public static final String MGMT_PROP_PIECES_RCVD = "PiecesReceived";
     
     protected final String poolName;
     protected final IbisIdentifier me, peer;
@@ -583,9 +583,9 @@ implements Config, BitTorrentUpcall, P2PConnection {
 
     @Override
     public Number getManagementProperty(String key) {
-        if (MGMT_PROP_PIECED_SENT.equals(key)) {
+        if (MGMT_PROP_PIECES_SENT.equals(key)) {
             return piecesSent;
-        } else if (MGMT_PROP_PIECED_RCVD.equals(key)) {
+        } else if (MGMT_PROP_PIECES_RCVD.equals(key)) {
             return piecesReceived;
         } else {
             return communicator.getManagementProperty(key);
@@ -594,9 +594,9 @@ implements Config, BitTorrentUpcall, P2PConnection {
     
     @Override
     public void setManagementProperty(String key, Number value) {
-        if (MGMT_PROP_PIECED_SENT.equals(key)) {
+        if (MGMT_PROP_PIECES_SENT.equals(key)) {
             piecesSent = value.intValue();
-        } else if (MGMT_PROP_PIECED_RCVD.equals(key)) {
+        } else if (MGMT_PROP_PIECES_RCVD.equals(key)) {
             piecesReceived = value.intValue();
         } else {
             communicator.setManagementProperty(key, value);
@@ -608,36 +608,37 @@ implements Config, BitTorrentUpcall, P2PConnection {
             String upProp = BitTorrentCommunicator.MGMT_PROP_UPLOAD_RATE;
             double upBytesNsec = communicator.getManagementProperty(upProp).doubleValue();
             double upMBSec = Convert.bytesPerNanosecToMBytesPerSec(upBytesNsec);
-            String upRate = Convert.round(upMBSec, 2);
 
             String downProp = BitTorrentCommunicator.MGMT_PROP_DOWNLOAD_RATE;
             double downBytesNsec = communicator.getManagementProperty(downProp).doubleValue();
             double downMBSec = Convert.bytesPerNanosecToMBytesPerSec(downBytesNsec);
-            String downRate = Convert.round(downMBSec, 2);
 
-            return "upload_rate " + upRate + " download_rate " + downRate;
+            return String.format("upload_rate %1$.2f download_rate %2$.2f", 
+                    upMBSec, downMBSec);
         } else {
             return "";
         }
     }
 
-    public void printStats(long totalTimeMillis) {
-        String percPiecesSent = Convert.round(piecesSent
-                / (double) admin.getNoTotalPieces() * 100, 2);
-        String percPiecesReceived = Convert.round(piecesReceived
-                / (double) admin.getNoTotalPieces() * 100, 2);
-        String percPiecePickTime = Convert.round(Convert
-                .microsecToMillisec(piecePickTimer.totalTimeVal())
-                / (double) totalTimeMillis * 100, 2);
-
-        Config.statsLogger.info(me + " peer_stats " + peer + ": " + "sent " + 
-                piecesSent + " = " + percPiecesSent + "% " + "rcvd " + 
-                piecesReceived + " = " + percPiecesReceived + "% " + 
-                "picking " + piecePickTimer.totalTime() + " = " + 
-                percPiecePickTime + " %" + " " + getRateStats());
-
-        communicator.printStats();
-        asyncSender.printStats();
+    public void printStats(String prefix, long totalTimeMillis) {
+        double totalPieces = admin.getNoTotalPieces();
+        
+        double percPiecesSent = piecesSent / totalPieces * 100;
+        String percSent = String.format("%1$.2f", percPiecesSent);
+        double percPiecesReceived = piecesReceived / totalPieces * 100;
+        String percReceived = String.format("%1$.2f", percPiecesReceived);
+        
+        double piecePickMs = 
+            Convert.microsecToMillisec(piecePickTimer.totalTimeVal());
+        double percPiecePickTime = piecePickMs / (double)totalTimeMillis * 100;
+        String percPickTime = String.format("%1$.2f", percPiecePickTime);
+        
+        Config.statsLogger.info(prefix + "stats_peer " + peer + ": sent " + 
+            piecesSent + " = " + percSent + "% rcvd " + piecesReceived + 
+            " = " + percReceived + "% picking " + piecePickTimer.totalTime() +
+            " = " + percPickTime + "% " + getRateStats());
+        
+        asyncSender.printStats(prefix);
     }
 
     public void close() throws IOException {

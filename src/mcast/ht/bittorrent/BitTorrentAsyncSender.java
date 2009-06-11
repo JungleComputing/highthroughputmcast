@@ -140,9 +140,10 @@ public class BitTorrentAsyncSender implements Runnable, Config {
         notifyAll();
     }
 
-    public synchronized void printStats() {
+    public synchronized void printStats(String prefix) {
         if (END_GAME) {
-            Config.statsLogger.info("#cancelled pieces: " + cancelledCount);
+            Config.statsLogger.info(prefix + "#cancelled pieces: " + 
+                    cancelledCount);
         }
         cancelledCount = 0;
     }

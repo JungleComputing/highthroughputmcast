@@ -6,9 +6,10 @@ import mcast.ht.ConfigProperties;
 
 interface Config {
 
-    public Logger statsLogger = Logger.getLogger("gridmulticast.stats.mob");
+    public Logger statsLogger = Logger.getLogger("mcast.stats.mob");
     
-    static final String PROPERTY_PREFIX = "gridmulticast.mob.";
+    static final String PROPERTY_PREFIX = 
+        mcast.ht.Config.PROPERTY_PREFIX + "mob.";
 
     static final String s_local_min_peers = PROPERTY_PREFIX + "local_min_peers";
     static final String s_global_min_peers = PROPERTY_PREFIX + "global_min_peers";

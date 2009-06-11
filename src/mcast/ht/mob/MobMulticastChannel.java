@@ -2,8 +2,11 @@ package mcast.ht.mob;
 
 import ibis.ipl.Ibis;
 import ibis.ipl.IbisIdentifier;
+import ibis.ipl.PortType;
 
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -15,7 +18,6 @@ import mcast.ht.AbstractMulticastChannel;
 import mcast.ht.LocationPool;
 import mcast.ht.bittorrent.BitTorrentAdmin;
 import mcast.ht.bittorrent.BitTorrentAdminImpl;
-import mcast.ht.bittorrent.BitTorrentConnection;
 import mcast.ht.Pool;
 import mcast.ht.net.GraphConnectionNegotiator;
 import mcast.ht.net.P2PConnection;
@@ -23,8 +25,6 @@ import mcast.ht.net.P2PConnectionFactory;
 import mcast.ht.net.P2PConnectionPool;
 import mcast.ht.robber.GlobalPeersGenerator;
 import mcast.ht.storage.Storage;
-
-import mcast.ht.util.Convert;
 
 public class MobMulticastChannel extends AbstractMulticastChannel
 implements Config 
@@ -112,6 +112,14 @@ implements Config
 		logger.info("- end game:              "	+ mcast.ht.bittorrent.Config.END_GAME);
 	}
 
+    public static List<PortType> getPortTypes() {
+        List<PortType> result = new LinkedList<PortType>();
+        
+        result.add(MobConnection.getPortType());
+        
+        return result;
+    }
+    
 	private String peerList(P2PConnectionPool<? extends P2PConnection> connectionPool) {
 		StringBuilder peers = new StringBuilder();
 		String concat = "";
@@ -179,57 +187,9 @@ implements Config
 		}
 	}
 
-	@Override
-	public long getLongTotal(String mgmtProperty) {
-	    long localValue = 0;
-	    if (localConnectionPool != null) {
-	        localValue = localConnectionPool.getLongTotal(mgmtProperty);
-	    }
-	    
-	    long globalValue = 0;
-        if (globalConnectionPool != null) {
-            globalValue = globalConnectionPool.getLongTotal(mgmtProperty);
-        }
-        
-        return localValue + globalValue;
-	}
-	
-	public synchronized void printStats() throws IOException {
-		if (admin != null) {
-			if (localConnectionPool != null) {
-				localConnectionPool.printStats();
-			}
-
-			if (globalConnectionPool != null) {
-				globalConnectionPool.printStats();
-			}
-
-			printPieceOriginStats();
-
-			admin.printStats();
-		}
-	}
-
-	private void printPieceOriginStats() {
-	    String prop = BitTorrentConnection.MGMT_PROP_PIECED_RCVD; 
-		
-	    long piecesReceivedLocal = 
-		    localConnectionPool.getLongTotal(prop);
-		
-		long piecesReceivedGlobal = 
-		    globalConnectionPool.getLongTotal(prop);
-
-		double totalPieces = admin.getNoTotalPieces();
-
-		String percReceivedLocal = Convert.round((double) piecesReceivedLocal
-				/ totalPieces * 100, 2);
-		String percReceivedGlobal = Convert.round((double) piecesReceivedGlobal
-				/ totalPieces * 100, 2);
-
-		Config.statsLogger.info("pool_stats rcvd " + "local " + 
-		        piecesReceivedLocal + " = " + percReceivedLocal + "% " + 
-		        "global " + piecesReceivedGlobal + " = " + percReceivedGlobal + 
-		        "%");
+	public synchronized void printStats(String prefix) throws IOException {
+		MobStats.printStats(Config.statsLogger, prefix, localConnectionPool, 
+		        globalConnectionPool, admin);
 	}
 
 }
