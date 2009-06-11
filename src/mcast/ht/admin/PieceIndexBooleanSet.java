@@ -9,11 +9,18 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
+import mcast.ht.util.Convert;
+
 public class PieceIndexBooleanSet extends AbstractPieceIndexSet
         implements PieceIndexSet {
 
     private static final int DEFAULT_CAPACITY = 16;
-
+    
+    // Largest size of the boolean array for which is still cheaper to use
+    // Ibis serialization (one byte per boolean) instead of converting booleans
+    // to bits.
+    private static final int TRADEOF_BOOLEAN_CONVERSION = 5;
+    
     private boolean[] list;
     private int size;
 
@@ -38,9 +45,16 @@ public class PieceIndexBooleanSet extends AbstractPieceIndexSet
         size = m.readInt();
 
         int capacity = m.readInt();
-        list = new boolean[capacity];
-
-        m.readArray(list);
+        
+        if (capacity <= TRADEOF_BOOLEAN_CONVERSION) {
+            list = new boolean[capacity];
+            m.readArray(list);
+        } else {
+            int byteSize = m.readInt();
+            byte[] bytes = new byte[byteSize];
+            m.readArray(bytes);
+            list = Convert.bytesToBooleans(bytes, capacity);
+        }
     }
 
     PieceIndexBooleanSet(PieceIndexBooleanSet original) {
@@ -110,7 +124,14 @@ public class PieceIndexBooleanSet extends AbstractPieceIndexSet
     public void writeTo(WriteMessage m) throws IOException {
         m.writeInt(size);
         m.writeInt(list.length);
-        m.writeArray(list);
+        
+        if (list.length <= TRADEOF_BOOLEAN_CONVERSION) {
+            m.writeArray(list);
+        } else {
+            byte[] bytes = Convert.booleansToBytes(list);
+            m.writeInt(bytes.length);
+            m.writeArray(bytes);
+        }
     }
 
     protected void ensureCapacity(int capacity, boolean exact) {
