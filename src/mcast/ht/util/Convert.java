@@ -281,5 +281,66 @@ public class Convert {
 	public static boolean byteToBoolean(byte b) {
 		return (b == 0) ? false : true;
 	}
+	
+	public static byte[] booleansToBytes(boolean[] booleans) {
+	    int size = booleans.length >> 3;
+        int rest = booleans.length % 8;
+        
+        if (rest > 0) {
+            size++;
+        }
+        
+        byte[] bytes = new byte[size];        
+        
+        int byteIndex = 0;
+        int bitCount = 0;
+        
+        for (int i = 0; i < booleans.length; i++) {
+            if (bitCount > 0) {
+                bytes[byteIndex] = (byte)(bytes[byteIndex] << 1);
+            }
+            
+            if (booleans[i]) {
+                bytes[byteIndex] |= 1;
+            }
+            
+            bitCount++;
+            if (bitCount == 8) {
+                bitCount = 0;
+                byteIndex++;
+            }
+        }
+        
+        if (rest > 0) {
+            int lastIndex = bytes.length - 1;
+            bytes[lastIndex] = (byte)(bytes[lastIndex] << (8 - rest));
+        }
+        
+        return bytes;
+	}
 
+    private static final byte[] masks = { -128, 64, 32, 16, 8, 4, 2, 1 };
+    
+	public static boolean[] bytesToBooleans(byte[] bytes, int booleanArrSize) {
+	    boolean[] booleans = new boolean[booleanArrSize];
+	        
+	    int byteIndex = 0;
+	    int bitCount = 0;
+	        
+	    for (int i = 0; i < booleanArrSize; i++) {
+	        if ((bytes[byteIndex] & masks[bitCount]) != 0) {
+	            booleans[i] = true;
+	        }
+	            
+	        bitCount++;
+	            
+	        if (bitCount == 8) {
+	            bitCount = 0;
+	            byteIndex++;
+	        }
+	    }
+	        
+	    return booleans;
+	}
+	
 }
