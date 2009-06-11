@@ -3,6 +3,7 @@ package mcast.ht.net;
 import ibis.ipl.ConnectionTimedOutException;
 import ibis.ipl.Ibis;
 import ibis.ipl.IbisIdentifier;
+import ibis.ipl.Location;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,7 +50,8 @@ implements P2PConnectionNegotiator<C>, DoorbellHandler, Config
         doorbell.activate();
 
         // create a deterministic random seed 
-        int seed = RANDOM_SEED + name.hashCode();
+        int rank = parseRank(ibis.identifier().location());
+        int seed = rank >= 0 ? RANDOM_SEED + rank : RANDOM_SEED + name.hashCode();
         
         // choose peers
         logger.debug("choosing peers");
@@ -63,6 +65,28 @@ implements P2PConnectionNegotiator<C>, DoorbellHandler, Config
 
         logger.info(name + "connecting to peers " + peers);
         connections = createConnections(peers, ibis, connectionFactory);
+    }
+    
+    /**
+     * Hack to retrieve the rank of an application node when using the
+     * cluster emulator. The Ibis location is then set to 'nodeXX@clustername',
+     * where XX is the rank of the node.
+     *  
+     * @return the rank of the node as deduced from the Ibis location, or
+     * -1 if no rank could be found. 
+     */
+    private int parseRank(Location l) {
+        String s = l.toString();
+        
+        try {
+            if ("node".equals(s.substring(0, 4))) {
+                return Integer.parseInt(s.substring(4, 6));
+            }
+        } catch (Exception ignored) {
+            logger.trace("Could not parse rank from Ibis location", ignored);
+        }
+        
+        return -1;
     }
 
     public Iterator<C> iterator() {
