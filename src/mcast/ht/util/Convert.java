@@ -1,10 +1,6 @@
 package mcast.ht.util;
 
-import java.text.*;
-
 public class Convert {
-
-	private static final DecimalFormat formatter = new DecimalFormat();
 
 	public static double toSec(double value, String unit)
 	throws IllegalArgumentException
@@ -278,79 +274,12 @@ public class Convert {
 		return Math.floor(nanosec / 1000000L);
 	}
 
-	public static String round(double value, int noDecimals) {
-		formatter.setMinimumFractionDigits(noDecimals);
-		formatter.setMaximumFractionDigits(noDecimals);
-		formatter.setGroupingSize(0);
-		return formatter.format(value);
-	}
-
-	public static double ceilVal(double value, int noDecimals) {
-		double pow = Math.pow(10, noDecimals);
-		return Math.ceil(value * pow) / pow;
-	}
-
-	public static String prepadZeros(int i) {
-		if (i < 10) {
-			return "0" + i;
-		} else {
-			return Integer.toString(i);
-		}
-
-	}
-
-	public static String prepad(String s, char c, int totalLength) {
-		if (s.length() >= totalLength) {
-			return s;
-		} else {
-			return chars(c, totalLength - s.length()) + s;
-		}
-	}
-
-	private static String chars(char c, int number) {
-		String result = "";
-		for (int i = 0; i < number; i++) {
-			result += c;
-		}
-		return result;
-	}
-
 	public static byte booleanToByte(boolean b) {
 		return b ? (byte) 1 : (byte) 0;
 	}
 
 	public static boolean byteToBoolean(byte b) {
 		return (b == 0) ? false : true;
-	}
-
-	public static String toString(int[] a) {
-		if (a == null) {
-			return "null";
-		} else {
-			String result = "[";
-			String concat = "";
-			for (int i = 0; i < a.length; i++) {
-				result += Integer.toString(a[i]) + concat;
-				concat = ", ";
-			}
-			result += "]";
-			return result;
-		}
-	}
-
-	public static String toString(String[] a) {
-		if (a == null) {
-			return "null";
-		} else {
-			String result = "[";
-			String concat = "";
-			for (int i = 0; i < a.length; i++) {
-				result += a[i] + concat;
-				concat = ", ";
-			}
-			result += "]";
-			return result;
-		}
 	}
 
 }
