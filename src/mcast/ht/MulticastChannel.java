@@ -68,7 +68,7 @@ public interface MulticastChannel {
      * 
      * @throws IOException
      */
-    public void printStats() throws IOException;
+    public void printStats(String prefix) throws IOException;
 
     /**
      * Closes this multicast channel. After a channel is closed, it can no 
