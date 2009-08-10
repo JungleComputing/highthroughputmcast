@@ -4,8 +4,10 @@ import ibis.ipl.IbisIdentifier;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import mcast.ht.Collective;
+import mcast.ht.Config;
 import mcast.ht.Pool;
 import mcast.ht.graph.PossiblePeersGenerator;
 
@@ -13,9 +15,12 @@ public class GlobalPeersGenerator
 implements PossiblePeersGenerator<IbisIdentifier> {
 
     private Pool pool;
-
+    private Random random;
+    
     public GlobalPeersGenerator(Pool pool) {
         this.pool = pool;
+        
+        random = new Random(Config.RANDOM_SEED);
     }
 
     public List<IbisIdentifier> generatePossiblePeers(IbisIdentifier node) {
@@ -30,9 +35,23 @@ implements PossiblePeersGenerator<IbisIdentifier> {
             if (!peerCollective.equals(nodeCollective)) {
                 List<IbisIdentifier> peerMembers = peerCollective.getMembers();
                 
-                int peerRank = nodeCollectiveRank % peerMembers.size();
-                IbisIdentifier peerOption = peerMembers.get(peerRank);
-
+                double peerCollectiveShare = 
+                    peerMembers.size() / (double)nodeMembers.size();
+                
+                int firstPeerRank = (int)Math.floor(nodeCollectiveRank * peerCollectiveShare);
+                int lastPeerRank = (int)Math.ceil((nodeCollectiveRank + 1) * peerCollectiveShare);
+                
+                IbisIdentifier peerOption = null;
+                
+                if (firstPeerRank == lastPeerRank) {
+                    // do not call the random generator
+                    peerOption = peerMembers.get(firstPeerRank);
+                } else {
+                    // choose a random rank between first (inclusive) and last (exclusive)
+                    int r = random.nextInt(lastPeerRank - firstPeerRank);
+                    peerOption = peerMembers.get(firstPeerRank + r);
+                }
+                
                 result.add(peerOption);
             }
         }
